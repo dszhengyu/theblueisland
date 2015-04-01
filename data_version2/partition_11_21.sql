@@ -41,3 +41,18 @@ insert into l_11_21
 	select distinct user_id, item_id
     from _train_user
     where time >= @d2 and time < @d3 and behavior_type = 4;
+    
+select * from u_11_21
+into outfile 'z:\\theblueisland\\u_11_21.csv' 
+fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+lines terminated by '\n'; 
+
+select * from i_11_21
+into outfile 'z:\\theblueisland\\i_11_21.csv' 
+fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+lines terminated by '\n'; 
+
+select * from l_11_21
+into outfile 'z:\\theblueisland\\l_11_21.csv' 
+fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+lines terminated by '\n'; 

@@ -30,3 +30,13 @@ insert into u_target
     from _train_user
     where time >= @d1 and time < @d2
     order by item_id ,user_id;
+    
+select * from u_target
+into outfile 'z:\\theblueisland\\u_target.csv' 
+fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+lines terminated by '\n'; 
+
+select * from i_target
+into outfile 'z:\\theblueisland\\i_target.csv' 
+fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+lines terminated by '\n'; 
