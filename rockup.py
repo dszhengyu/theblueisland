@@ -34,7 +34,7 @@ def localTest():
     clf = joblib.load('clfPickle.plk')
     #evalue the model
     y_pred = clf.predict(X_test)
-    print classification_report(y_test, y_pred)
+    print (classification_report(y_test, y_pred))
     
 def onlineSet():
     #1 predict the y
@@ -42,6 +42,17 @@ def onlineSet():
     clf = joblib.load('clfPickle.plk')
     y = clf.predict(X)
     #2 get the predicted (user_id, item_id)
+    
+#     #bug here
+# online would be like :array([[b'100014756', b'102222980'],
+#        [b'100014756', b'103452035'],
+#        [b'100014756', b'107257771'],
+#        ..., 
+#        [b'99984389', b'88658621'],
+#        [b'99984389', b'88801806'],
+#        [b'99984389', b'90230442']], 
+#       dtype='|S15')
+      
     online = np.loadtxt('feature_label\\example_target.csv',
                         delimiter = ',', dtype = 'S15')
     online = online[y > 0]
@@ -61,28 +72,23 @@ def onlineSet():
     online = [tuple(i) for i in online]
     online = list(set(online))
     #5 into file
-    online = np.asarray(online, dtype = np.float32)
-    np.savetxt(fname = 'tianchi_mobile_recommendation_predict.csv',
-               X = online, delimiter = ',')
-    onlineFile = open('tianchi_mobile_recommendation_predict.csv')
-    content = onlineFile.readlines()
-    onlineFile.close()
     onlineFile = open('tianchi_mobile_recommendation_predict.csv', 'w')
     onlineFile.write('user_id, item_id\n')
+    content = [','.join(i) + '\n' for i in online]
     onlineFile.writelines(content)
     onlineFile.close()
 
 
 def main():
-    print "1) updateFeature"
-    print "2) train"
-    print "3) localtest"
-    print "4) onlinetest"
-    menu = raw_input(">> ")
+    print ("1) updateFeature")
+    print ("2) train")
+    print ("3) localtest")
+    print ("4) onlinetest")
+    menu = input(">> ")
     if (menu == '1'):
-        begin = raw_input("begin from.. or n for default ")
-        days = raw_input("days .. or n for default ")
-        target =  raw_input("target ? or n for default ")
+        begin = input("begin from.. or n for default ")
+        days = input("days .. or n for default ")
+        target =  input("target ? or n for default ")
         if (begin == 'n'):
             begin = '11_18'
         if (days == 'n'):
@@ -92,15 +98,15 @@ def main():
         if (target == 'n'):
             target = 0
         else:
-            target = 1
+            target = 12
         updateFeature(begin, days, target)
     if (menu == '2'):
-        begin = raw_input("begin or n for default ")
-        days = raw_input("days or n for default ")
-        print "1) justTrain"
-        print "2) gridTrain"
-        print "3) showLearningCurve"
-        option =  raw_input("option ")
+        begin = input("begin or n for default ")
+        days = input("days or n for default ")
+        print ("1) justTrain")
+        print ("2) gridTrain")
+        print ("3) showLearningCurve")
+        option =  input("option ")
         if (begin == 'n'):
             begin = '11_18'
         if (days == 'n'):
@@ -110,7 +116,7 @@ def main():
         option = int(option)
         train(begin, days, option)
     if (menu == '3'):
-        localtest()
+        localTest()
     if (menu == '4'):        
         onlineSet()
         
@@ -123,8 +129,9 @@ def unitTest4localTest():
 
 
 def test():
-##    train('11_18', 7, 2)
-##    localTest()
+    #updateFeature('12_1', 8)
+    train('11_18', 14, 2)
+    localTest()
     onlineSet()
 
 if __name__ == '__main__': test()

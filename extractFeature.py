@@ -22,7 +22,7 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
         uptime = datetime.strptime('2014_12_18 23:00:00', "%Y_%m_%d %H:%M:%S")
 
     beginTime = datetime.now()
-    print beginTime
+    print (beginTime)
     
 #load labelDict
     if (target == 0):
@@ -35,7 +35,7 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
     else:
         labelDict = {}
 
-    print day, ' labelDict complete, ', datetime.now()
+    print (day, ' labelDict complete, ', datetime.now())
         
 #extract item feature & put into itemDict
     itemDict = {}
@@ -60,7 +60,7 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
         itemDict[curItem] = iValue
     i.close()
     
-    print day, ' itemDict complete, ' , datetime.now()
+    print (day, ' itemDict complete, ' , datetime.now())
 
 #extract u-i & user feature, add item features
     if (target == 0):
@@ -97,7 +97,7 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
         examples.extend(example)
     f.close()
 
-    print day, ' features extraction complete, start writing... ', datetime.now()
+    print (day, ' features extraction complete, start writing... ', datetime.now())
 
 #write into files
 
@@ -121,8 +121,8 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
         examplefile.close()
          
     endTime = datetime.now()
-    print day, ' complete ' , datetime.now()
-    print "used time: " + str(endTime - beginTime)    
+    print (day, ' complete ' , datetime.now())
+    print ("used time: " + str(endTime - beginTime)) 
 
 def selectItemFeature(itemSet, uptime):
     'method to select item feature'
@@ -251,9 +251,9 @@ def unitTest4_selectFeatureLabel():
     
     x, y, z = selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, 5)
     
-    print x, len(x)
-    print y, len(y)
-    print z, len(z)
+    print (x, len(x))
+    print (y, len(y))
+    print (z, len(z))
     
     input('>>')
 
