@@ -2,8 +2,10 @@
 #entry = [elm.strip('"\n') for elm in line.split(",")]
 
 from datetime import datetime, timedelta
+from random import randint
+import numpy as np
 
-def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\", prefix2 = "Z:\\theblueisland\\feature_label\\"):
+def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefix2 = "feature_label\\"):
     if (target == 0):
         ufile = prefix + "u_" + day + ".csv"
         ifile = prefix + "i_" + day + ".csv"
@@ -57,10 +59,14 @@ def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\
         iValue = selectItemFeature(itemSet, uptime)
         itemDict[curItem] = iValue
     i.close()
-
+    
     print day, ' itemDict complete, ' , datetime.now()
 
 #extract u-i & user feature, add item features
+    if (target == 0):
+        randRange = 3500000 / (1000 * ratio)
+    else:
+        randRange = 0
     features = []
     labels = []
     examples = []
@@ -76,7 +82,7 @@ def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\
             userSet.append(entry)
         else:
             uValue = selectUserFeature(userSet, uptime)
-            uiValue, label, example = selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime)
+            uiValue, label, example = selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange)
             features.extend(uiValue)
             labels.extend(label)
             examples.extend(example)
@@ -85,7 +91,7 @@ def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\
             curUser = entry[0]
     else:
         uValue = selectUserFeature(userSet, uptime)
-        uiValue, label, example= selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime)
+        uiValue, label, example= selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange)
         features.extend(uiValue)
         labels.extend(label)
         examples.extend(example)
@@ -94,9 +100,8 @@ def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\
     print day, ' features extraction complete, start writing... ', datetime.now()
 
 #write into files
+
     featurefile = open(featureDay, "w")
-##    features = [','.join([str(i) for i in j]) + '\n' for j in features]
-##    featurefile.writes(features)
     for line in features:
         tmp = ','.join([str(i) for i in line]) + '\n'
         featurefile.write(tmp)
@@ -104,16 +109,12 @@ def extractFeature(day, target = 0, prefix = "Z:\\theblueisland\\data_version2\\
     
     if (target == 0):
         labelfile = open(labelDay, "w")
-##        labels = [','.join([str(i) for i in j]) + '\n' for j in labels]
-##        labelfile.writes(labels)
         for line in labels:
             tmp = ','.join([str(i) for i in line]) + '\n'
             labelfile.write(tmp)
         labelfile.close()
     else:
         examplefile = open(examplefilename, "w")
-##        examples = [','.join([str(i) for i in j]) + '\n' for j in examples]
-##        examplefile.writes(examples)
         for line in examples:
             tmp = ','.join([str(i) for i in line]) + '\n'
             examplefile.write(tmp)
@@ -136,14 +137,14 @@ def selectItemFeature(itemSet, uptime):
         person[entry[0]][behav] += 1
     #sum up the data in routine and dict
 #    every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
-#    every2 = [routine[i][j] + routine[i + 1][j] for i in range(0, 10, 2) for j in range(1, 5)]
-    every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] for i in range(0, 9, 3) for j in range(1, 5)]
+    every2 = [routine[i][j] + routine[i + 1][j] for i in range(0, 10, 2) for j in range(1, 5)]
+#    every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] for i in range(0, 9, 3) for j in range(1, 5)]
     totalPerson = 0
     total = [0, 0, 0, 0, 0]
     for key in person:
         total = [total[i] + person[key][i] for i in range(5)]
         totalPerson += 1
-    return total[1 : 5] + [totalPerson] + every3
+    return total[1 : 5] + every2
            
 
 def selectUserFeature(userSet, uptime):
@@ -154,15 +155,15 @@ def selectUserFeature(userSet, uptime):
         behav = int(entry[2])
         thing.setdefault(entry[1], [0, 0, 0, 0, 0])
         thing[entry[1]][behav] += 1
-    #sum uo the data in dict
+    #sum up the data in dict
     totalThing = 0
     total = [0, 0, 0, 0, 0]
     for key in thing:
         total = [total[i] + thing[key][i] for i in range(5)]
         totalThing += 1
-    return total[1 : 5] + [totalThing]
+    return []
 
-def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime):
+def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange):
     'method to select feature, based on <user_id, Item_id>'
     features = []
     labels = []
@@ -175,26 +176,33 @@ def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime):
         if (entry[1] == curItem):
             uiSet.append(entry)
         else:
-            singleUIValue = selectSingleFeature(uiSet, uptime)
-            iValue = itemDict.get(curItem, [])
             if ((curUser, curItem) in labelDict):
                 label = 1
-            else:
+            elif(randint(0, randRange) == 0):
                 label = 0
+            else:
+                uiSet = []
+                uiSet.append(entry)
+                curItem = entry[1]
+                continue
+            singleUIValue = selectSingleFeature(uiSet, uptime)
+            iValue = itemDict.get(curItem, [])
             example = [curUser, curItem]
             features.append(singleUIValue + uValue + iValue)
             labels.append([label])
-            examples.append(example)
+            examples.append(example)         
             uiSet = []
             uiSet.append(entry)
             curItem = entry[1]
     else:
-        singleUIValue = selectSingleFeature(uiSet, uptime)
-        iValue = itemDict.get(curItem, [])
         if ((curUser, curItem) in labelDict):
             label = 1
-        else:
+        elif(randint(0, randRange) == 0):
             label = 0
+        else:
+            return features, labels, examples
+        singleUIValue = selectSingleFeature(uiSet, uptime)
+        iValue = itemDict.get(curItem, [])
         example = [curUser, curItem]
         features.append(singleUIValue + uValue + iValue)
         labels.append([label])
@@ -241,7 +249,7 @@ def unitTest4_selectFeatureLabel():
     itemDict = {'3232': [88, 88, 88], '3111': [88888, 88888]}
     labelDict = {('121', '3232'): None}
     
-    x, y, z = selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime)
+    x, y, z = selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, 5)
     
     print x, len(x)
     print y, len(y)

@@ -1,7 +1,8 @@
-set @d1 = str_to_date('2014-12-9 00', '%Y-%m-%d %H');
-set @d2 = str_to_date('2014-12-19 00', '%Y-%m-%d %H');
+set @d1 = str_to_date('2014-11-26 00', '%Y-%m-%d %H');
+set @d2 = str_to_date('2014-12-06 00', '%Y-%m-%d %H');
+set @d3 = str_to_date('2014-12-07 00', '%Y-%m-%d %H');
 
-CREATE TABLE `u_target` (
+CREATE TABLE `u_11_26` (
   `user_id` varchar(20) NOT NULL,
   `item_id` varchar(20) NOT NULL,
   `behavior_type` varchar(1) NOT NULL,
@@ -10,7 +11,7 @@ CREATE TABLE `u_target` (
   `time` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `i_target` (
+CREATE TABLE `i_11_26` (
   `user_id` varchar(20) NOT NULL,
   `item_id` varchar(20) NOT NULL,
   `behavior_type` varchar(1) NOT NULL,
@@ -19,29 +20,39 @@ CREATE TABLE `i_target` (
   `time` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-insert into u_target
+CREATE TABLE `l_11_26` (
+  `user_id` varchar(20) NOT NULL,
+  `item_id` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+insert into u_11_26
 	select *
     from _train_user
     where time >= @d1 and time < @d2
     order by user_id, item_id;
  
- insert into i_target
+ insert into i_11_26
 	select *
     from _train_user
     where time >= @d1 and time < @d2
     order by item_id ,user_id;
     
-select * from u_target
-into outfile 'z:\\theblueisland\\u_target.csv' 
+insert into l_11_26
+	select distinct user_id, item_id
+    from _train_user
+    where time >= @d2 and time < @d3 and behavior_type = 4;
+    
+select * from u_11_26
+into outfile 'z:\\theblueisland\\u_11_26.csv' 
 fields terminated by ',' optionally enclosed by '"' escaped by '"' 
 lines terminated by '\n'; 
 
-select * from i_target
-into outfile 'z:\\theblueisland\\i_target.csv' 
+select * from i_11_26
+into outfile 'z:\\theblueisland\\i_11_26.csv' 
 fields terminated by ',' optionally enclosed by '"' escaped by '"' 
 lines terminated by '\n'; 
 
-select item_id from _train_item
-into outfile 'z:\\theblueisland\\subItem.csv' 
+select * from l_11_26
+into outfile 'z:\\theblueisland\\l_11_26.csv' 
 fields terminated by ',' optionally enclosed by '"' escaped by '"' 
 lines terminated by '\n'; 
