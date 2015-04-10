@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.cross_validation import StratifiedKFold, train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.linear_model import LogisticRegression
+from sklearn import svm
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
@@ -12,7 +13,9 @@ from sklearn.learning_curve import learning_curve
 from sklearn.externals import joblib
 
 pwd = 'z:\\theblueisland\\'
-prefix = pwd + "feature_label\\"
+prefix = pwd + "feature_label2\\"
+clf1File = pwd + 'clfPickle1.plk'
+clf2File = pwd + 'clfPickle2.plk'
 
 def getDates(beginDate, daycount):
     dateList = ['11' + '_' + str(day) for day in range(18, 31)]
@@ -36,41 +39,39 @@ def generateXy(beginDate, daycount):
         y1 = np.loadtxt(f, delimiter = ',').tolist()
         y.extend(y1)
         y = np.array(y)
-
+        
 #default use '12_8' as test set
     X_test = np.loadtxt(prefix + 'feature_12_8.csv', delimiter = ',')
     y_test = np.loadtxt(prefix + 'label_12_8.csv', delimiter = ',')
     X_test = StandardScaler().fit_transform(X_test)
     np.save('X_test.npy', X_test)
     np.save('y_test.npy', y_test)
-    
     X_train = X
     y_train = y
-    
 #qian gui ze complete
-
     X_train = StandardScaler().fit_transform(X_train)
-    
     return X_train, y_train
 
-def justTrain(X, y):
-    clf = joblib.load(pwd + 'clfPickle.plk')
-    clf.fit(X, y)
-    joblib.dump(clf, 'clfPickle.plk')
 
-def gridTrain(X, y, cv):
-    parameters ={'penalty' : ['l1', 'l2'],
-                 'C' : [0.001, 10000, 30]}
-    clf = LogisticRegression()
-    clf = GridSearchCV(estimator = clf, param_grid = parameters, scoring = 'f1',
-                       n_jobs = 1, cv = StratifiedKFold(y, 3))
+def trainAll(X, y):
+    cv = 3
+    param1 ={'penalty' : ['l1', 'l2'],
+                 'C' : [0.0001, 10000, 30]}
+    clf1 = gridTrain(LogisticRegression(), param1, X, y, cv, clf1File)
+    
+    param2 = {}
+    
+def gridTrain(clf, param, X, y, cv, file):
+    clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'f1',
+                       n_jobs = 2, cv = StratifiedKFold(y, 3))
     clf.fit(X, y)
-    joblib.dump(clf.best_estimator_, pwd + 'clfPickle.plk')
-    print (clf.best_estimator_)
-    showLearningCurve(X, y, cv)
+    clf = clf.best_estimator_
+    joblib.dump(clf, file)
+    showLearningCurve(clf, X, y, cv)
+    return clf
 
-def showLearningCurve(X, y, cv):
-    clf = joblib.load(pwd + 'clfPickle.plk')
+def showLearningCurve(clf, X, y, cv):
+    print (clf)
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
                                                              cv = StratifiedKFold(y, 3),
                                                              n_jobs = 1)
@@ -102,9 +103,6 @@ def showLearningCurve(X, y, cv):
     print (valid_scores)
 
 def test():
-    print (X.shape[0])
-    print ("")
-    print (y.shape[0])
     input(">> ")
 
 if __name__ == '__main__': test()

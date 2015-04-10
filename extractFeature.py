@@ -69,9 +69,9 @@ def extractFeature(day, random = 1, target = 0, ratio = 10,
 #extract u-i & user feature, add item features
     if (not target and random):
         if (day == '12_2'):
-            randRange = 1700000 / (6000 * ratio)
+            randRange = 1200000 / (6000 * ratio)
         else:
-            randRange = 1700000 / (1000 * ratio)
+            randRange = 120000 / (1000 * ratio)
     else:
         randRange = 0
     randRange = int(randRange)
@@ -131,6 +131,7 @@ def extractFeature(day, random = 1, target = 0, ratio = 10,
     endTime = datetime.now()
     print (day, ' complete ' , datetime.now())
     print ("used time: " + str(endTime - beginTime)) 
+    print ('')
 
 def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange):
     'method to select feature, based on <user_id, Item_id>'
@@ -190,7 +191,7 @@ def selectItemFeature(itemSet, uptime):
         person.setdefault(entry[0], [0, 0, 0, 0, 0])
         person[entry[0]][behav] += 1
     #sum up the data in routine and dict
-    # every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
+    every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
     every2 = [routine[i][j] + routine[i + 1][j] 
                 for i in range(0, 10, 2) for j in range(1, 5)]
     # every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] 
@@ -200,7 +201,7 @@ def selectItemFeature(itemSet, uptime):
     for key in person:
         total = [total[i] + person[key][i] for i in range(5)]
         totalPerson += 1
-    return total[1 : 5] + every2
+    return total[1 : 5] + every1[ : 6] + every2[ : 3]
            
 def selectUserFeature(userSet, uptime):
     'method to select user feature'
@@ -216,7 +217,7 @@ def selectUserFeature(userSet, uptime):
     for key in thing:
         total = [total[i] + thing[key][i] for i in range(5)]
         totalThing += 1
-    return []
+    return total[1 : 5]
     
 def selectSingleFeature(uiSet, uptime):
     'return ui-feature'
@@ -229,10 +230,10 @@ def selectSingleFeature(uiSet, uptime):
         routine[deltaDay][behav] += 1
         total[behav] += 1
     #sum up the data in routine
-#    every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
+    every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
     every2 = [routine[i][j] + routine[i + 1][j] for i in range(0, 10, 2) for j in range(1, 5)]
 #    every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] for i in range(0, 9, 3) for j in range(1, 5)]
-    return total[1 : 5] + every2
+    return total[1 : 5] + every1[ : 6] + every2[ : 3]
 
 def unitTest4_selectFeatureLabel():
     userSet = [['121', '3232', '1', 'qwq', '1212', '2014-11-19 20:00:00'],
@@ -267,7 +268,7 @@ def unitTest4_selectFeatureLabel():
     input('>>')
 
 def test():
-    extractFeature('11_18', 0)
+    extractFeature('12_8', 0)
     input('>>')
 
 if __name__ == '__main__': test()
