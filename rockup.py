@@ -1,5 +1,8 @@
 from extractFeature import extractFeature
 from fancymodel import *
+from extractFeature_Pandas import extractFeature_Pandas
+
+pwd = 'z:\\theblueisland\\'
 
 def updateFeature(begin = '11_18', days = 1, target = 0):
     f = open('update_feature_log.log', 'w')
@@ -16,16 +19,14 @@ def updateFeature(begin = '11_18', days = 1, target = 0):
         f.flush()
     f.close()
 
-def train(begin = '11_18', days = 1, option = 0, cv = 3):
+def train(begin = '11_18', days = 1, option = 2, cv = 3):
     #split the data into train_cv & test
-    X, y = splitTCT(begin, days)  
+    X, y = generateXy(begin, days)  
     #base on option, just train or grid_search or learning_curve
     if(option == 1):
         justTrain(X, y)
     elif (option == 2):
         gridTrain(X, y, cv)
-    elif (option == 3):
-        showLearningCurve(X, y, cv)
  
 def localTest():   
     'test on the local date, which solit from function train()'
@@ -37,47 +38,25 @@ def localTest():
     print (classification_report(y_test, y_pred))
     
 def onlineSet():
+    index = ['user_id', 'item_id']
     #1 predict the y
-    X = np.loadtxt('feature_label\\feature_target.csv', delimiter = ',')
-    clf = joblib.load('clfPickle.plk')
+    X = pd.read_csv(pwd + 'feature_label\\feature_target.csv', header = None)
+    clf = joblib.load(pwd + 'clfPickle.plk')
     y = clf.predict(X)
     #2 get the predicted (user_id, item_id)
-    
-#     #bug here
-# online would be like :array([[b'100014756', b'102222980'],
-#        [b'100014756', b'103452035'],
-#        [b'100014756', b'107257771'],
-#        ..., 
-#        [b'99984389', b'88658621'],
-#        [b'99984389', b'88801806'],
-#        [b'99984389', b'90230442']], 
-#       dtype='|S15')
-      
-    online = np.loadtxt('feature_label\\example_target.csv',
-                        delimiter = ',', dtype = 'S15')
+    online = pd.read_csv(pwd + 'feature_label\\example_target.csv', names = index)
     online = online[y > 0]
     #3 cross betaList and subItemDict
-    subItemDict = {}
-    l = open('data_version2\\subItem.csv')
-    for line in l.readlines():
-        entry = [elm.strip('"\n') for elm in line.split(",")]
-        subItemDict[entry[0]] = None
-    l.close()
-    online2 = []
-    for i in online:
-        if i[1] in subItemDict:
-            online2.append(i)
-    online = online2
-    #4 remove the repeate (user_id, item_id)
-    online = [tuple(i) for i in online]
-    online = list(set(online))
-    #5 into file
-    onlineFile = open('tianchi_mobile_recommendation_predict.csv', 'w')
-    onlineFile.write('user_id, item_id\n')
-    content = [','.join(i) + '\n' for i in online]
-    onlineFile.writelines(content)
-    onlineFile.close()
+    l = pd.read_csv(pwd + 'data_version2\\subItem.csv', 
+                        names = ['item_id', 'item_category'])
+    online = pd.merge(online, l)
+    #4 remove same category
 
+    #5 remove the repeate (user_id, item_id)
+    online = online.drop_duplicates()
+    #6 into file
+    online.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
+                                na_rep = '0', index = False, header = True)
 
 def main():
     print ("1) updateFeature")
@@ -105,7 +84,6 @@ def main():
         days = input("days or n for default ")
         print ("1) justTrain")
         print ("2) gridTrain")
-        print ("3) showLearningCurve")
         option =  input("option ")
         if (begin == 'n'):
             begin = '11_18'
@@ -129,9 +107,9 @@ def unitTest4localTest():
 
 
 def test():
-    #updateFeature('12_1', 8)
-    train('11_18', 14, 2)
-    localTest()
+    # updateFeature('11_18', 21)
+    # train('11_19', 19)
+    # localTest()
     onlineSet()
 
 if __name__ == '__main__': test()

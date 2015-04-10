@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 from random import randint
 import numpy as np
 
-def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefix2 = "feature_label\\"):
+pwd = 'z:\\theblueisland\\'
+
+def extractFeature(day, random = 1, target = 0, ratio = 10, 
+                    prefix = pwd + "data_version2\\", 
+                    prefix2 = pwd + "feature_label\\"):
     if (target == 0):
         ufile = prefix + "u_" + day + ".csv"
         ifile = prefix + "i_" + day + ".csv"
@@ -63,10 +67,14 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
     print (day, ' itemDict complete, ' , datetime.now())
 
 #extract u-i & user feature, add item features
-    if (target == 0):
-        randRange = 3500000 / (1000 * ratio)
+    if (not target and random):
+        if (day == '12_2'):
+            randRange = 1700000 / (6000 * ratio)
+        else:
+            randRange = 1700000 / (1000 * ratio)
     else:
         randRange = 0
+    randRange = int(randRange)
     features = []
     labels = []
     examples = []
@@ -124,45 +132,6 @@ def extractFeature(day, target = 0, ratio = 4, prefix = "data_version2\\", prefi
     print (day, ' complete ' , datetime.now())
     print ("used time: " + str(endTime - beginTime)) 
 
-def selectItemFeature(itemSet, uptime):
-    'method to select item feature'
-    #write into table and dict
-    routine = [[0 for _ in range(5)] for _ in range(10)]
-    person = {}
-    for entry in itemSet:
-        deltaDay = (uptime - datetime.strptime(entry[5], "%Y-%m-%d %H:%M:%S")).days
-        behav = int(entry[2])
-        routine[deltaDay][behav] += 1
-        person.setdefault(entry[0], [0, 0, 0, 0, 0])
-        person[entry[0]][behav] += 1
-    #sum up the data in routine and dict
-#    every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
-    every2 = [routine[i][j] + routine[i + 1][j] for i in range(0, 10, 2) for j in range(1, 5)]
-#    every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] for i in range(0, 9, 3) for j in range(1, 5)]
-    totalPerson = 0
-    total = [0, 0, 0, 0, 0]
-    for key in person:
-        total = [total[i] + person[key][i] for i in range(5)]
-        totalPerson += 1
-    return total[1 : 5] + every2
-           
-
-def selectUserFeature(userSet, uptime):
-    'method to select user feature'
-    #write into dict
-    thing = {}
-    for entry in userSet:
-        behav = int(entry[2])
-        thing.setdefault(entry[1], [0, 0, 0, 0, 0])
-        thing[entry[1]][behav] += 1
-    #sum up the data in dict
-    totalThing = 0
-    total = [0, 0, 0, 0, 0]
-    for key in thing:
-        total = [total[i] + thing[key][i] for i in range(5)]
-        totalThing += 1
-    return []
-
 def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange):
     'method to select feature, based on <user_id, Item_id>'
     features = []
@@ -208,6 +177,46 @@ def selectFeatureLabel(userSet, uValue, itemDict, labelDict, uptime, randRange):
         labels.append([label])
         examples.append(example)
     return features, labels, examples
+   
+def selectItemFeature(itemSet, uptime):
+    'method to select item feature'
+    #write into table and dict
+    routine = [[0 for _ in range(5)] for _ in range(10)]
+    person = {}
+    for entry in itemSet:
+        deltaDay = (uptime - datetime.strptime(entry[5], "%Y-%m-%d %H:%M:%S")).days
+        behav = int(entry[2])
+        routine[deltaDay][behav] += 1
+        person.setdefault(entry[0], [0, 0, 0, 0, 0])
+        person[entry[0]][behav] += 1
+    #sum up the data in routine and dict
+    # every1 = [routine[i][j] for i in range(10) for j in range (1, 5)]
+    every2 = [routine[i][j] + routine[i + 1][j] 
+                for i in range(0, 10, 2) for j in range(1, 5)]
+    # every3 = [routine[i][j] + routine[i + 1][j] + routine[i + 2][j] 
+    #             for i in range(0, 9, 3) for j in range(1, 5)]
+    totalPerson = 0
+    total = [0, 0, 0, 0, 0]
+    for key in person:
+        total = [total[i] + person[key][i] for i in range(5)]
+        totalPerson += 1
+    return total[1 : 5] + every2
+           
+def selectUserFeature(userSet, uptime):
+    'method to select user feature'
+    #write into dict
+    thing = {}
+    for entry in userSet:
+        behav = int(entry[2])
+        thing.setdefault(entry[1], [0, 0, 0, 0, 0])
+        thing[entry[1]][behav] += 1
+    #sum up the data in dict
+    totalThing = 0
+    total = [0, 0, 0, 0, 0]
+    for key in thing:
+        total = [total[i] + thing[key][i] for i in range(5)]
+        totalThing += 1
+    return []
     
 def selectSingleFeature(uiSet, uptime):
     'return ui-feature'

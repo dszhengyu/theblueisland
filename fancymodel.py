@@ -1,6 +1,6 @@
-##avoid 12_12
-
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.cross_validation import StratifiedKFold, train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.linear_model import LogisticRegression
@@ -10,18 +10,17 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import f1_score, classification_report
 from sklearn.learning_curve import learning_curve
 from sklearn.externals import joblib
-import matplotlib.pyplot as plt
 
-prefix = "feature_label\\"
+pwd = 'z:\\theblueisland\\'
+prefix = pwd + "feature_label\\"
 
 def getDates(beginDate, daycount):
     dateList = ['11' + '_' + str(day) for day in range(18, 31)]
-    dateList += ['12' + '_' + str(day) for day in range(1, 19)]
-    dateList.remove('12_2')
+    dateList += ['12' + '_' + str(day) for day in range(1, 8)]
     start = dateList.index(beginDate)
     return dateList[start : start + daycount]
 
-def splitTCT(beginDate, daycount):
+def generateXy(beginDate, daycount):
     'method to train the model'
     daySet = getDates(beginDate, daycount)
     trainDaySet = [prefix + 'feature_'+ f + '.csv' for f in daySet]
@@ -37,17 +36,25 @@ def splitTCT(beginDate, daycount):
         y1 = np.loadtxt(f, delimiter = ',').tolist()
         y.extend(y1)
         y = np.array(y)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2)
+
+#default use '12_8' as test set
+    X_test = np.loadtxt(prefix + 'feature_12_8.csv', delimiter = ',')
+    y_test = np.loadtxt(prefix + 'label_12_8.csv', delimiter = ',')
     X_test = StandardScaler().fit_transform(X_test)
     np.save('X_test.npy', X_test)
     np.save('y_test.npy', y_test)
+    
+    X_train = X
+    y_train = y
+    
+#qian gui ze complete
+
     X_train = StandardScaler().fit_transform(X_train)
     
     return X_train, y_train
 
 def justTrain(X, y):
-    clf = joblib.load('clfPickle.plk')
+    clf = joblib.load(pwd + 'clfPickle.plk')
     clf.fit(X, y)
     joblib.dump(clf, 'clfPickle.plk')
 
@@ -58,11 +65,12 @@ def gridTrain(X, y, cv):
     clf = GridSearchCV(estimator = clf, param_grid = parameters, scoring = 'f1',
                        n_jobs = 1, cv = StratifiedKFold(y, 3))
     clf.fit(X, y)
-    joblib.dump(clf.best_estimator_, 'clfPickle.plk')
+    joblib.dump(clf.best_estimator_, pwd + 'clfPickle.plk')
     print (clf.best_estimator_)
+    showLearningCurve(X, y, cv)
 
 def showLearningCurve(X, y, cv):
-    clf = joblib.load('clfPickle.plk')
+    clf = joblib.load(pwd + 'clfPickle.plk')
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
                                                              cv = StratifiedKFold(y, 3),
                                                              n_jobs = 1)
@@ -94,7 +102,6 @@ def showLearningCurve(X, y, cv):
     print (valid_scores)
 
 def test():
-    X, y = splitTCT('11_18', 2)
     print (X.shape[0])
     print ("")
     print (y.shape[0])
