@@ -8,18 +8,16 @@ from sklearn import svm
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import f1_score, classification_report, precision_score
 from sklearn.learning_curve import learning_curve
 from sklearn.externals import joblib
 
 pwd = 'z:\\theblueisland\\'
 prefix = pwd + "feature_label2\\"
-clf1File = pwd + 'clfPickle1.plk'
-clf2File = pwd + 'clfPickle2.plk'
 
 def getDates(beginDate, daycount):
     dateList = ['11' + '_' + str(day) for day in range(18, 31)]
-    dateList += ['12' + '_' + str(day) for day in range(1, 8)]
+    dateList += ['12' + '_' + str(day) for day in range(1, 9)]
     start = dateList.index(beginDate)
     return dateList[start : start + daycount]
 
@@ -39,42 +37,51 @@ def generateXy(beginDate, daycount):
         y1 = np.loadtxt(f, delimiter = ',').tolist()
         y.extend(y1)
         y = np.array(y)
-        
 #default use '12_8' as test set
-    X_test = np.loadtxt(prefix + 'feature_12_8.csv', delimiter = ',')
-    y_test = np.loadtxt(prefix + 'label_12_8.csv', delimiter = ',')
-    X_test = StandardScaler().fit_transform(X_test)
-    np.save('X_test.npy', X_test)
-    np.save('y_test.npy', y_test)
+    # X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
+    # y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
+    # X_test = StandardScaler().fit_transform(X_test)
+    # np.save('X_test.npy', X_test)
+    # np.save('y_test.npy', y_test)
     X_train = X
     y_train = y
 #qian gui ze complete
     X_train = StandardScaler().fit_transform(X_train)
     return X_train, y_train
+  
+def modelFactory(option):
+    clf1File = pwd + 'clfPickle1.plk'
+    clf2File = pwd + 'clfPickle2.plk'
+    # clf3File = pwd + 'clfPickle3.plk'
+    if (option == 'train'):
+        clf1 = LogisticRegression()
+        param1 = {'C' : [0.01, 10000, 30], 'penalty' : ['l1', 'l2']}
+        clf2 = svm.LinearSVC(class_weight = 'auto')   
+        param2 = {'C' : [0.01, 10000, 30]}
+        # clf3 = svm.SVC(cache_size = 1024)
+        # param3 = {'C' : [0.001, 10000, 30], 'kernel' : ['rbf', 'sigmoid', 'limear']}
+        return [(clf1, param1, clf1File), (clf2, param2, clf2File)]
+    elif (option == 'predict'):
+        clf1 = joblib.load(clf1File)
+        clf2 = joblib.load(clf2File)
+        # clf3 = joblib.load(clf3File)
+        return [clf1, clf2]
+        
+def gridTrain(X, y):
+    for clf, param, file in modelFactory('train'):
+        clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'precision',
+                        n_jobs = 3, cv = StratifiedKFold(y, 3))
+        clf.fit(X, y)
+        clf = clf.best_estimator_
+        showLearningCurve(clf, X, y)
+        joblib.dump(clf, file)
 
-
-def trainAll(X, y):
-    cv = 3
-    param1 ={'penalty' : ['l1', 'l2'],
-                 'C' : [0.0001, 10000, 30]}
-    clf1 = gridTrain(LogisticRegression(), param1, X, y, cv, clf1File)
-    
-    param2 = {}
-    
-def gridTrain(clf, param, X, y, cv, file):
-    clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'f1',
-                       n_jobs = 2, cv = StratifiedKFold(y, 3))
-    clf.fit(X, y)
-    clf = clf.best_estimator_
-    joblib.dump(clf, file)
-    showLearningCurve(clf, X, y, cv)
-    return clf
-
-def showLearningCurve(clf, X, y, cv):
+def showLearningCurve(clf, X, y):
     print (clf)
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
                                                              cv = StratifiedKFold(y, 3),
-                                                             n_jobs = 1)
+                                                             n_jobs = 1,
+                                                             scoring = 'f1')
     plt.figure()
     plt.title('learning curve')
     plt.xlabel("Training examples")
@@ -93,14 +100,11 @@ def showLearningCurve(clf, X, y, cv):
              label="Training score")
     plt.plot(train_sizes, valid_scores_mean, 'o-', color="g",
              label="Cross-validation score")
-
     plt.legend(loc="best")
     plt.show()
-    
-    
-    print (train_sizes)
-    print (train_scores)
-    print (valid_scores)
+    # print (train_sizes)
+    # print (train_scores)
+    # print (valid_scores)
 
 def test():
     input(">> ")
