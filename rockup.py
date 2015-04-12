@@ -40,7 +40,7 @@ def onlineSet():
         y = np.logical_or(y, y1)
     #2 get the predicted (user_id, item_id)
     online = pd.read_csv(prefix + 'example_target.csv', names = index)
-    online1 = online[y]
+    online1 = online[y > 0]
     #3 cross betaList and subItemDict
     l = pd.read_csv(pwd + 'data_version2\\subItem.csv', 
                         names = ['item_id', 'item_category'])
@@ -54,8 +54,8 @@ def onlineSet():
                                 na_rep = '0', index = False, header = True)
 
 def test():
-    updateFeature('11_18', 21)
-    train('11_18', 21)
+    updateFeature('11_18', 10)
+    train('11_18', 10)
     extractFeature_Pandas('target', target = 1)
     onlineSet()
     
@@ -68,4 +68,4 @@ def main():
     train('11_18', 21)
     onlineSet()
 
-if __name__ == '__main__': test()
+if __name__ == '__main__': main()

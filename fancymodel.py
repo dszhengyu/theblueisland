@@ -38,11 +38,11 @@ def generateXy(beginDate, daycount):
         y.extend(y1)
         y = np.array(y)
 #default use '12_8' as test set
-    # X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
-    # y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
-    # X_test = StandardScaler().fit_transform(X_test)
-    # np.save('X_test.npy', X_test)
-    # np.save('y_test.npy', y_test)
+    X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
+    y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
+    X_test = StandardScaler().fit_transform(X_test)
+    np.save('X_test.npy', X_test)
+    np.save('y_test.npy', y_test)
     X_train = X
     y_train = y
 #qian gui ze complete
@@ -55,22 +55,22 @@ def modelFactory(option):
     # clf3File = pwd + 'clfPickle3.plk'
     if (option == 'train'):
         clf1 = LogisticRegression()
-        param1 = {'C' : [0.01, 10000, 30], 'penalty' : ['l1', 'l2']}
-        clf2 = svm.LinearSVC(class_weight = 'auto')   
-        param2 = {'C' : [0.01, 10000, 30]}
+        param1 = {'C' : [0.001, 10000, 30], 'penalty' : ['l1', 'l2']}
+        # clf2 = svm.LinearSVC(class_weight = 'auto')   
+        # param2 = {'C' : [0.001, 10000, 30]}
         # clf3 = svm.SVC(cache_size = 1024)
         # param3 = {'C' : [0.001, 10000, 30], 'kernel' : ['rbf', 'sigmoid', 'limear']}
-        return [(clf1, param1, clf1File), (clf2, param2, clf2File)]
+        return [(clf1, param1, clf1File)]#, (clf2, param2, clf2File)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
-        clf2 = joblib.load(clf2File)
+        # clf2 = joblib.load(clf2File)
         # clf3 = joblib.load(clf3File)
-        return [clf1, clf2]
+        return [clf1]#, clf2]
         
 def gridTrain(X, y):
     for clf, param, file in modelFactory('train'):
-        clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'precision',
-                        n_jobs = 3, cv = StratifiedKFold(y, 3))
+        clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'f1',
+                        n_jobs = 1, cv = StratifiedKFold(y, 3))
         clf.fit(X, y)
         clf = clf.best_estimator_
         showLearningCurve(clf, X, y)
@@ -80,8 +80,7 @@ def showLearningCurve(clf, X, y):
     print (clf)
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
                                                              cv = StratifiedKFold(y, 3),
-                                                             n_jobs = 1,
-                                                             scoring = 'f1')
+                                                             n_jobs = 1)
     plt.figure()
     plt.title('learning curve')
     plt.xlabel("Training examples")

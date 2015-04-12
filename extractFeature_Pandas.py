@@ -4,7 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 
 pwd = 'z:\\theblueisland\\'
-day = '11_18'
+day = '11_20'
 target = 0
 ratio = 3
 prefix = pwd + "data_version2\\"
@@ -51,7 +51,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 2,
     xTotalFeature = xTotalFeature.add_prefix('x_total_')
     xTotalFeature.fillna(value = 0, inplace = True)
     #last intersect
-    xTotalFeature['last'] = u.groupby(['user_id', 'item_id'])['time'].min()
+    # xTotalFeature['last'] = u.groupby(['user_id', 'item_id'])['time'].min()
     # #rate   ATTENTION: inf is replace by median
     # xTotalFeature['4div1'] = xTotalFeature['x_total_4'].div(xTotalFeature['x_total_1'])
     # xTotalFeature[xTotalFeature['4div1'] == np.inf] = xTotalFeature['4div1'].median()
@@ -63,7 +63,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 2,
     xTimeFeature.fillna(value = 0, inplace = True)
     #every
     xevery2= [xTimeFeature[i] + xTimeFeature[i + 1] for i in range(0, 10, 2)]
-    xevery2 = pd.concat(xevery2, axis = 1)
+    xevery2 = pd.concat(xevery2, axis = 1).add_prefix('x_every2_')
     # #last
     # xlast1 = xTimeFeature[0]
     # xlast3 = xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2]
@@ -81,7 +81,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 2,
     uTotalFeature = uTotalFeature.add_prefix('u_total_')
     uTotalFeature.fillna(0, inplace = True)
     #last intersect
-    uTotalFeature['last'] = u.groupby('user_id')['time'].min()
+    # uTotalFeature['last'] = u.groupby('user_id')['time'].min()
     # #rate   ATTENTION: inf is replace by median
     # uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
     # uTotalFeature[uTotalFeature['4div1'] == np.inf] = uTotalFeature['4div1'].median()
@@ -117,7 +117,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 2,
     #                 for i in range(0, 10, 2)]
     # ievery2_34 = pd.concat(ievery2_34, axis = 1)
     ievery2 = [iTimeFeature[i] + iTimeFeature[i + 1] for i in range(0, 10, 2)]
-    ievery2 = pd.concat(ievery2, axis = 1)
+    ievery2 = pd.concat(ievery2, axis = 1).add_prefix('i_every2_')
     # #last
     # ilast1 = iTimeFeature[0]
     # ilast3 = iTimeFeature[0] + iTimeFeature[1] + iTimeFeature[2]
@@ -148,15 +148,15 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 2,
             zeros = zeros.ix[np.random.permutation(zeros.index)[ : zerosCount]]
             finalXy = pd.concat([ones, zeros])
         #random complete
+        finalXy.reset_index(inplace = True)
         finalXy.ix[ :, -1].to_csv(labelDay, na_rep = '0', 
                                     index = False, header = False)
-        finalXy.drop('buy', axis = 1, inplace = True)
-        finalXy.reset_index()
-        finalXy.drop(['user_id', 'item_id'], axis = 1, inplace = True)
+        finalXy.drop(['user_id', 'item_id', 'buy'], axis = 1, inplace = True)
     else:
         # save target example
-        finalXy.reset_index()
-        finalXy.ix[ :, : 2].to_csv(examplefilename, na_rep = '0', index = False, header = False)
+        finalXy.reset_index(inplace = True)
+        finalXy.ix[ :, : 2].to_csv(examplefilename, na_rep = '0', 
+                                    index = False, header = False)
         finalXy.drop(['user_id', 'item_id'], axis = 1, inplace = True)
 #done, write into file
     finalXy.to_csv(featureDay, na_rep = '0', index = False, header = False)
