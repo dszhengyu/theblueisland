@@ -23,12 +23,18 @@ def getDates(beginDate, daycount):
 
 def generateXy(beginDate, daycount):
     'method to train the model'
+#default use '12_8' as test set
+    X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
+    X_test = StandardScaler().fit_transform(X_test)
+    np.save('X_test.npy', X_test)
+    y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
+    np.save('y_test.npy', y_test)
+# train an cv set
     daySet = getDates(beginDate, daycount)
     trainDaySet = [prefix + 'feature_'+ f + '.csv' for f in daySet]
     labelDaySet = [prefix + 'label_'+ f + '.csv' for f in daySet]
     X = np.loadtxt(trainDaySet[0], delimiter = ',')
     y = np.loadtxt(labelDaySet[0], delimiter = ',')
-
     for f in trainDaySet[1 : ]:
         X = np.vstack((X, np.loadtxt(f, delimiter = ',')))
     for f in labelDaySet[1 : ]:
@@ -37,12 +43,6 @@ def generateXy(beginDate, daycount):
         y1 = np.loadtxt(f, delimiter = ',').tolist()
         y.extend(y1)
         y = np.array(y)
-#default use '12_8' as test set
-    X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
-    y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
-    X_test = StandardScaler().fit_transform(X_test)
-    np.save('X_test.npy', X_test)
-    np.save('y_test.npy', y_test)
     X_train = X
     y_train = y
 #qian gui ze complete

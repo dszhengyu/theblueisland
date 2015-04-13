@@ -27,45 +27,52 @@ def localTest():
     y_test = np.load('y_test.npy')
     for clf in modelFactory('predict'):
         y_pred = clf.predict(X_test)
+        print ('y_pred: ' + str(y_pred.sum()))
         print (classification_report(y_test, y_pred))
     
 def onlineSet():
     index = ['user_id', 'item_id']
     #1 predict the y
     X = pd.read_csv(prefix + 'feature_target.csv', header = None)
+    X = StandardScaler().fit_transform(X)
     clf = modelFactory('predict')[0]
     y = clf.predict(X)
+    y = np.logical_or(y, y)
     for clf in modelFactory('predict')[1 : ]:
         y1 = clf.predict(X)
         y = np.logical_or(y, y1)
+    print ('y_pred: ' + str(y.sum()))
     #2 get the predicted (user_id, item_id)
     online = pd.read_csv(prefix + 'example_target.csv', names = index)
-    online1 = online[y > 0]
+    online1 = online[y]
     #3 cross betaList and subItemDict
     l = pd.read_csv(pwd + 'data_version2\\subItem.csv', 
                         names = ['item_id', 'item_category'])
     online1 = pd.merge(online1, l)
     #4 remove same category
-
+    
     #5 remove the repeate (user_id, item_id)
     online1 = online1.drop_duplicates()
     #6 into file
+    print ('online set: ' + str(len(online1)))
     online1.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
                                 na_rep = '0', index = False, header = True)
 
 def test():
     updateFeature('11_18', 10)
-    train('11_18', 10)
+    extractFeature_Pandas('12_8', 0)
     extractFeature_Pandas('target', target = 1)
+    train('11_18', 10)
+    localTest()
     onlineSet()
     
 def main():
-    updateFeature('11_18', 21)
-    extractFeature_Pandas('12_8', 0)
-    extractFeature_Pandas('target', target = 1)
-    train('11_18', 20)
-    localTest()
+    # updateFeature('11_28', 11)
+    # extractFeature_Pandas('12_8', 0)
+    # extractFeature_Pandas('target', target = 1)
+    # train('11_18', 20)
+    # localTest()
     train('11_18', 21)
     onlineSet()
 
-if __name__ == '__main__': main()
+if __name__ == '__main__': test()
