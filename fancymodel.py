@@ -5,13 +5,14 @@ from sklearn.cross_validation import StratifiedKFold, train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import f1_score, classification_report, precision_score
 from sklearn.learning_curve import learning_curve
 from sklearn.externals import joblib
+from extractFeature_Pandas import ratio
 
 pwd = 'z:\\theblueisland\\'
 prefix = pwd + "feature_label2\\"
@@ -54,21 +55,25 @@ def generateXy(beginDate, daycount):
 def modelFactory(option):
     clf1File = model + 'clfPickle1.plk'
     clf2File = model + 'clfPickle2.plk'
-    # clf3File = model + 'clfPickle3.plk'
+    clf3File = model + 'clfPickle3.plk'
     if (option == 'train'):
         clf1 = LogisticRegression(class_weight = 'auto')
         param1 = {'C' : [30 ** i / 1000 for i in range(0, 5)], 
                     'penalty' : ['l1', 'l2']}
         clf2 = RandomForestClassifier()
         param2 = {'n_estimators' : [i for i in range(10, 90, 20)]}
-        # clf3 = svm.SVC(cache_size = 1024)
-        # param3 = {'C' : [0.001, 10000, 30], 'kernel' : ['rbf', 'sigmoid', 'limear']}
-        return [(clf1, param1, clf1File), (clf2, param2, clf2File)]
+        clf3 = GradientBoostingClassifier()
+        param3 = {}
+        return [(clf1, param1, clf1File), (clf2, param2, clf2File), 
+                    (clf3, param3, clf3File)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
+        clf1Score = 1
         clf2 = joblib.load(clf2File)
-        # clf3 = joblib.load(clf3File)
-        return [clf1, clf2]
+        clf2Score = 1
+        clf3 = joblib.load(clf3File)
+        clf3Score = 1
+        return [(clf1, clf1Score), (clf2, clf2Score), (clf3, clf3Score)]
         
 def gridTrain(X, y):
     for clf, param, file in modelFactory('train'):

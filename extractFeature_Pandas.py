@@ -3,15 +3,10 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+ratio = 40
 pwd = 'z:\\theblueisland\\'
-day = '11_20'
-target = 0
-ratio = 3
-prefix = pwd + "data_version2\\"
-prefix2 = pwd + "feature_label2\\"
-random = 1
 
-def extractFeature_Pandas(day, random = 1, target = 0, ratio = 30, 
+def extractFeature_Pandas(day, random = 1, target = 0, ratio = 40, 
                     prefix = pwd + "data_version2\\", 
                     prefix2 = pwd + "feature_label2\\"):
     if (target == 0):
@@ -52,6 +47,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 30,
     xTotalFeature.fillna(value = 0, inplace = True)
     #last intersect
     xLastTimeFeature = xTotalGroup['time'].min().unstack('behavior_type')
+    xLastTimeFeature.fillna(value = 10, inplace = True)
     xLastTimeFeature.sort_index(axis = 1, inplace = True)
     xLastTimeFeature = xLastTimeFeature.add_prefix('x_last_time_')
     #rate   ATTENTION: inf is replace by median
@@ -63,16 +59,16 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 30,
     xTimeFeature = xTimeFeature.unstack(['time', 'behavior_type'])
     xTimeFeature.sort_index(axis = 1, inplace = True)
     xTimeFeature.fillna(value = 0, inplace = True)
-    #every
-    xevery2= [xTimeFeature[i] + xTimeFeature[i + 1] for i in range(0, 10, 2)]
-    xevery2 = pd.concat(xevery2, axis = 1).add_prefix('x_every2_')
+    # #every
+    # xevery2= [xTimeFeature[i] + xTimeFeature[i + 1] for i in range(0, 10, 2)]
+    # xevery2 = pd.concat(xevery2, axis = 1).add_prefix('x_every2_')
     #last
     xlast1 = xTimeFeature[0]
-    # xlast3 = xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2]
+    xlast3 = xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2]
     # xlast5 = xlast3 + xTimeFeature[3] + xTimeFeature[4]
-    # xT = pd.concat([xlast1, xlast3, xlast5], axis = 1)
+    xT = pd.concat([xlast1, xlast3], axis = 1)
     #sum up
-    xTotalFeature = pd.concat([xTotalFeature, xLastTimeFeature, xevery2, xlast1[3]], axis = 1)
+    xTotalFeature = pd.concat([xTotalFeature, xLastTimeFeature, xT], axis = 1)
 
 ## USER
     # total
@@ -86,9 +82,9 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 30,
     uLastTimeFeature = uTotalGroup['time'].min().unstack('behavior_type')
     uLastTimeFeature.sort_index(axis = 1, inplace = True)
     uLastTimeFeature = uLastTimeFeature.add_prefix('u_last_time_')
-    #rate   ATTENTION: inf is replace by median
-    uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
-    uTotalFeature[uTotalFeature['4div1'] == np.inf] = uTotalFeature['4div1'].median()
+    # #rate   ATTENTION: inf is replace by median
+    # uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
+    # uTotalFeature[uTotalFeature['4div1'] == np.inf] = uTotalFeature['4div1'].median()
     # #time relative
     # uTimeGroup = u.groupby(['user_id', 'time', 'behavior_type'])
     # uTimeFeature = uTimeGroup['item_category'].count()
@@ -109,17 +105,17 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 30,
     iTotalGroup = i.groupby(['item_id', 'behavior_type'])
     iTotalFeature = iTotalGroup['user_id'].count().unstack('behavior_type')
     iTotalFeature.sort_index(axis = 1, inplace = True)
-    iTotalFeature = iTotalFeature.add_prefix('item_total_')
+    iTotalFeature = iTotalFeature.add_prefix('i_total_')
     #last intersect
     iLastTimeFeature = iTotalGroup['time'].min().unstack('behavior_type')
     iLastTimeFeature.sort_index(axis = 1, inplace = True)
     iLastTimeFeature = iLastTimeFeature.add_prefix('i_last_time_')
-    # time relative
-    iTimeGroup = u.groupby(['item_id', 'time', 'behavior_type'])
-    iTimeFeature = iTimeGroup['item_category'].count()
-    iTimeFeature = iTimeFeature.unstack(['time', 'behavior_type'])
-    iTimeFeature.sort_index(axis = 1, inplace = True)
-    iTimeFeature.fillna(value = 0, inplace = True)
+    # # time relative
+    # iTimeGroup = u.groupby(['item_id', 'time', 'behavior_type'])
+    # iTimeFeature = iTimeGroup['item_category'].count()
+    # iTimeFeature = iTimeFeature.unstack(['time', 'behavior_type'])
+    # iTimeFeature.sort_index(axis = 1, inplace = True)
+    # iTimeFeature.fillna(value = 0, inplace = True)
     # #every
     # ievery2 = [iTimeFeature[i] + iTimeFeature[i + 1] for i in range(0, 10, 2)]
     # ievery2 = pd.concat(ievery2, axis = 1).add_prefix('i_every2_')

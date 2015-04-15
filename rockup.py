@@ -1,6 +1,11 @@
 from extractFeature import extractFeature
 from fancymodel import *
 from extractFeature_Pandas import extractFeature_Pandas
+from damnrule import ruleFile
+
+ruleScore = 1
+threshold = 3
+onlineThreshold = 3
 
 def updateFeature(begin = '11_18', days = 1, target = 0):
     f = open('update_feature_log.log', 'w')
@@ -23,61 +28,84 @@ def train(begin = '11_18', days = 1):
  
 def localTest():   
     'test on the local set'
-    X_test = np.load('X_test.npy')
-    y_test = np.load('y_test.npy')
-    clf = modelFactory('predict')[0]
-    y = clf.predict(X_test)
-    y = np.logical_and(y, y)
+    X_test = np.load(pwd + 'X_test.npy')
+    y_test = np.load(pwd + 'y_test.npy')
+    y = pd.DataFrame(index = range(len(X_test)))
+    clf, score= modelFactory('predict')[0]
+    y_pred = clf.predict(X_test)
+    y_pred = np.logical_and(y_pred, y_pred)
+    i = 1
+    y.loc[y_pred, i] = score
     print (clf)
-    print ('y_pred: ' + str(y.sum()))
-    print (classification_report(y_test, y))
+    print ('y_pred: ' + str(y_pred.sum()))
+    print (classification_report(y_test, y_pred))
     print ('')
-    for clf in modelFactory('predict')[1 : ]:
+    for clf, score in modelFactory('predict')[1 : ]:
         y_pred = clf.predict(X_test)
-        y = np.logical_and(y, y_pred)
+        y_pred = np.logical_and(y_pred, y_pred)
+        i += 1
+        y.loc[y_pred, i] = score
         print (clf)
         print ('y_pred: ' + str(y_pred.sum()))
         print (classification_report(y_test, y_pred))
         print ('')
+    y.fillna(value = 0, inplace = True)
+    y = y.sum(axis = 1) >= threshold
     print ('final predict:')
+    print ('y_pred: ' + str(y.sum()))
     print (classification_report(y_test, y))
     
-def onlineSet():
+def onlineSet(norule = 1):
     index = ['user_id', 'item_id']
-    #1 predict the y
+    #1 predict the y_pred
     X = pd.read_csv(prefix + 'feature_target.csv', header = None)
     X = MinMaxScaler().fit_transform(X)
-    clf = modelFactory('predict')[0]
-    y = clf.predict(X)
-    y = np.logical_and(y, y)
-    print (y.sum())
-    for clf in modelFactory('predict')[1 : ]:
-        y1 = clf.predict(X)
-        print (y1.sum())
-        y = np.logical_and(y, y1)
-    print ('y_pred: ' + str(y.sum()))
-    #2 get the predicted (user_id, item_id)
-    online = pd.read_csv(prefix + 'example_target.csv', names = index)
-    online1 = online[y]
-    #3 cross betaList and subItemDict
+    # y = pd.DataFrame(index = range(len(X)))
+    y = pd.read_csv(prefix + 'example_target.csv', names = index)
+    clf, score = modelFactory('predict')[0]
+    y_pred = clf.predict(X)
+    y_pred = np.logical_and(y_pred, y_pred)
+    i = 1
+    scores = score
+    y.loc[y_pred, i] = score
+    print (y_pred.sum())
+    for clf, score in modelFactory('predict')[1 : ]:
+        y_pred = clf.predict(X)
+        y_pred = np.logical_and(y_pred, y_pred)
+        i += 1
+        scores += score
+        y.loc[y_pred, i] = score
+        print (y_pred.sum())
+    y.fillna(value = 0, inplace = True)
+    print ('online set before rule: ' 
+            + str((y.ix[ : , 1 :].sum(axis = 1) >= scores).sum()))
+    # add rule
+    if (norule == 0):
+        rule = pd.read_csv(ruleFile, names = ['user_id', 'item_id'])
+        rule['rule'] = ruleScore
+        y = pd.merge(y, rule, how = 'outer')
+        y.fillna(value = 0, inplace = True)
+    # threshold, get online
+    online = y[y.ix[ : , 1 :].sum(axis = 1) >= onlineThreshold]
+    online = online.ix[ : , 'user_id' : 'item_id']
+    print ('online set before cross: ' + str(len(online)))
+    # cross the subItem set
     l = pd.read_csv(pwd + 'data_version2\\subItem.csv', 
                         names = ['item_id', 'item_category'])
-    online1 = pd.merge(online1, l)
-    #4 remove same category
-    
-    #5 remove the repeate (user_id, item_id)
-    online1 = online1.drop_duplicates()
-    #6 into file
-    print ('online set: ' + str(len(online1)))
-    online1.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
+    online = pd.merge(online, l)
+    # remove the repeat (user_id, item_id)
+    online.drop_duplicates(inplace = True)
+    print ('online set final: ' + str(len(online)))
+    # into file
+    online.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
                                 na_rep = '0', index = False, header = True)
 
 def test():
-    updateFeature('11_18', 10)
-    extractFeature_Pandas('12_8', 0)
-    extractFeature_Pandas('target', target = 1)
-    train('11_18', 10)
-    localTest()
+    # updateFeature('11_18', 10)
+    # extractFeature_Pandas('12_8', 0)
+    # extractFeature_Pandas('target', target = 1)
+    # train('11_18', 10)
+    # localTest()
     onlineSet()
     
 def main():

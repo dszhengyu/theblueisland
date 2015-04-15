@@ -6,10 +6,9 @@ from pandas import DataFrame
 day = '12_8'
 pwd = 'z:\\theblueisland\\'
 prefix = pwd + "data_version2\\"
-prefix2 = pwd + "rule\\"
 ufile = prefix + "u_" + day + ".csv"
 lfile = prefix + "l_" + day + ".csv"
-ruleFile = prefix2 + 'rule.csv'
+ruleFile = pwd + 'rule\\rule.csv'
 uptime = datetime.strptime('2014_' + day + ' 00:00:00', "%Y_%m_%d %H:%M:%S")
 uptime += timedelta(days = 9, hours = 23)
 
