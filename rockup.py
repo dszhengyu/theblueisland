@@ -25,22 +25,36 @@ def localTest():
     'test on the local set'
     X_test = np.load('X_test.npy')
     y_test = np.load('y_test.npy')
-    for clf in modelFactory('predict'):
+    clf = modelFactory('predict')[0]
+    y = clf.predict(X_test)
+    y = np.logical_and(y, y)
+    print (clf)
+    print ('y_pred: ' + str(y.sum()))
+    print (classification_report(y_test, y))
+    print ('')
+    for clf in modelFactory('predict')[1 : ]:
         y_pred = clf.predict(X_test)
+        y = np.logical_and(y, y_pred)
+        print (clf)
         print ('y_pred: ' + str(y_pred.sum()))
         print (classification_report(y_test, y_pred))
+        print ('')
+    print ('final predict:')
+    print (classification_report(y_test, y))
     
 def onlineSet():
     index = ['user_id', 'item_id']
     #1 predict the y
     X = pd.read_csv(prefix + 'feature_target.csv', header = None)
-    X = StandardScaler().fit_transform(X)
+    X = MinMaxScaler().fit_transform(X)
     clf = modelFactory('predict')[0]
     y = clf.predict(X)
-    y = np.logical_or(y, y)
+    y = np.logical_and(y, y)
+    print (y.sum())
     for clf in modelFactory('predict')[1 : ]:
         y1 = clf.predict(X)
-        y = np.logical_or(y, y1)
+        print (y1.sum())
+        y = np.logical_and(y, y1)
     print ('y_pred: ' + str(y.sum()))
     #2 get the predicted (user_id, item_id)
     online = pd.read_csv(prefix + 'example_target.csv', names = index)
@@ -67,11 +81,11 @@ def test():
     onlineSet()
     
 def main():
-    # updateFeature('11_28', 11)
-    # extractFeature_Pandas('12_8', 0)
-    # extractFeature_Pandas('target', target = 1)
-    # train('11_18', 20)
-    # localTest()
+    updateFeature('11_18', 21)
+    extractFeature_Pandas('12_8', 0)
+    extractFeature_Pandas('target', target = 1)
+    train('11_18', 20)
+    localTest()
     train('11_18', 21)
     onlineSet()
 

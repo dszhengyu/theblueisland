@@ -5,8 +5,9 @@ from sklearn.cross_validation import StratifiedKFold, train_test_split
 from sklearn.grid_search import GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
 from datetime import datetime
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import f1_score, classification_report, precision_score
 from sklearn.learning_curve import learning_curve
@@ -14,6 +15,7 @@ from sklearn.externals import joblib
 
 pwd = 'z:\\theblueisland\\'
 prefix = pwd + "feature_label2\\"
+model = pwd + 'model\\'
 
 def getDates(beginDate, daycount):
     dateList = ['11' + '_' + str(day) for day in range(18, 31)]
@@ -25,7 +27,7 @@ def generateXy(beginDate, daycount):
     'method to train the model'
 #default use '12_8' as test set
     X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
-    X_test = StandardScaler().fit_transform(X_test)
+    X_test = MinMaxScaler().fit_transform(X_test)
     np.save('X_test.npy', X_test)
     y_test = np.loadtxt(prefix + 'test_label_12_8.csv', delimiter = ',')
     np.save('y_test.npy', y_test)
@@ -46,38 +48,44 @@ def generateXy(beginDate, daycount):
     X_train = X
     y_train = y
 #qian gui ze complete
-    X_train = StandardScaler().fit_transform(X_train)
+    X_train = MinMaxScaler().fit_transform(X_train)
     return X_train, y_train
   
 def modelFactory(option):
-    clf1File = pwd + 'clfPickle1.plk'
-    clf2File = pwd + 'clfPickle2.plk'
-    # clf3File = pwd + 'clfPickle3.plk'
+    clf1File = model + 'clfPickle1.plk'
+    clf2File = model + 'clfPickle2.plk'
+    # clf3File = model + 'clfPickle3.plk'
     if (option == 'train'):
-        clf1 = LogisticRegression()
-        param1 = {'C' : [0.001, 10000, 30], 'penalty' : ['l1', 'l2']}
-        # clf2 = svm.LinearSVC(class_weight = 'auto')   
-        # param2 = {'C' : [0.001, 10000, 30]}
+        clf1 = LogisticRegression(class_weight = 'auto')
+        param1 = {'C' : [30 ** i / 1000 for i in range(0, 5)], 
+                    'penalty' : ['l1', 'l2']}
+        clf2 = RandomForestClassifier()
+        param2 = {'n_estimators' : [i for i in range(10, 90, 20)]}
         # clf3 = svm.SVC(cache_size = 1024)
         # param3 = {'C' : [0.001, 10000, 30], 'kernel' : ['rbf', 'sigmoid', 'limear']}
-        return [(clf1, param1, clf1File)]#, (clf2, param2, clf2File)]
+        return [(clf1, param1, clf1File), (clf2, param2, clf2File)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
-        # clf2 = joblib.load(clf2File)
+        clf2 = joblib.load(clf2File)
         # clf3 = joblib.load(clf3File)
-        return [clf1]#, clf2]
+        return [clf1, clf2]
         
 def gridTrain(X, y):
     for clf, param, file in modelFactory('train'):
-        clf = GridSearchCV(estimator = clf, param_grid = param, scoring = 'f1',
-                        n_jobs = 1, cv = StratifiedKFold(y, 3))
+        clf = GridSearchCV(estimator = clf, param_grid = param, 
+                        scoring = 'precision', n_jobs = 1, 
+                        cv = StratifiedKFold(y, 3))
         clf.fit(X, y)
         clf = clf.best_estimator_
+        y_pred = clf.predict(X)
+        # print (clf)
+        # print ('y_pred.sum(): ' + str(y_pred.sum()))
+        # print (classification_report(y, y_pred))
+        # print ('')
         showLearningCurve(clf, X, y)
         joblib.dump(clf, file)
 
 def showLearningCurve(clf, X, y):
-    print (clf)
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
                                                              cv = StratifiedKFold(y, 3),
                                                              n_jobs = 1)
