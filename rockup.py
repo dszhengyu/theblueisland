@@ -3,8 +3,9 @@ from fancymodel import *
 from extractFeature_Pandas import extractFeature_Pandas
 from damnrule import ruleFile
 
+pwd = 'z:\\theblueisland\\'
 ruleScore = 1
-threshold = 3
+trainthreshold = 3
 onlineThreshold = 3
 
 def updateFeature(begin = '11_18', days = 1, target = 0):
@@ -50,7 +51,7 @@ def localTest():
         print (classification_report(y_test, y_pred))
         print ('')
     y.fillna(value = 0, inplace = True)
-    y = y.sum(axis = 1) >= threshold
+    y = y.sum(axis = 1) >= trainthreshold
     print ('final predict:')
     print ('y_pred: ' + str(y.sum()))
     print (classification_report(y_test, y))
@@ -101,11 +102,11 @@ def onlineSet(norule = 1):
                                 na_rep = '0', index = False, header = True)
 
 def test():
-    # updateFeature('11_18', 10)
-    # extractFeature_Pandas('12_8', 0)
-    # extractFeature_Pandas('target', target = 1)
-    # train('11_18', 10)
-    # localTest()
+    updateFeature('11_18', 10)
+    extractFeature_Pandas('12_8', 0)
+    extractFeature_Pandas('target', target = 1)
+    train('11_18', 10)
+    localTest()
     onlineSet()
     
 def main():

@@ -1,3 +1,4 @@
+from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,9 +13,11 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import f1_score, classification_report, precision_score
 from sklearn.learning_curve import learning_curve
 from sklearn.externals import joblib
-from extractFeature_Pandas import ratio
+from extractFeature_Pandas import featureName
+from rockup import pwd
 
-pwd = 'z:\\theblueisland\\'
+featureName = pwd + 'feature_name.csv'
+featureScore = pwd + 'feature_score.csv'
 prefix = pwd + "feature_label2\\"
 model = pwd + 'model\\'
 
@@ -25,7 +28,9 @@ def getDates(beginDate, daycount):
     return dateList[start : start + daycount]
 
 def generateXy(beginDate, daycount):
-    'method to train the model'
+# start time
+    begin = datetime.now()
+    print ('splict start ', begin)
 #default use '12_8' as test set
     X_test = np.loadtxt(prefix + 'test_feature_12_8.csv', delimiter = ',')
     X_test = MinMaxScaler().fit_transform(X_test)
@@ -50,6 +55,10 @@ def generateXy(beginDate, daycount):
     y_train = y
 #qian gui ze complete
     X_train = MinMaxScaler().fit_transform(X_train)
+#time
+    end = datetime.now()
+    print ('splict end ', end)
+    print ('')
     return X_train, y_train
   
 def modelFactory(option):
@@ -58,12 +67,12 @@ def modelFactory(option):
     clf3File = model + 'clfPickle3.plk'
     if (option == 'train'):
         clf1 = LogisticRegression(class_weight = 'auto')
-        param1 = {'C' : [30 ** i / 1000 for i in range(0, 5)], 
+        param1 = {'C' : [0.001, 0.03, 0.9, 27, 100, 300], 
                     'penalty' : ['l1', 'l2']}
         clf2 = RandomForestClassifier()
-        param2 = {'n_estimators' : [i for i in range(10, 90, 20)]}
+        param2 = {'n_estimators' : [i for i in range(50, 120, 30)]}
         clf3 = GradientBoostingClassifier()
-        param3 = {}
+        param3 = {'n_estimators' : [i for i in range(100, 200, 50)]}
         return [(clf1, param1, clf1File), (clf2, param2, clf2File), 
                     (clf3, param3, clf3File)]
     elif (option == 'predict'):
@@ -76,19 +85,32 @@ def modelFactory(option):
         return [(clf1, clf1Score), (clf2, clf2Score), (clf3, clf3Score)]
         
 def gridTrain(X, y):
+    begin = datetime.now()
+    print ('training start ', begin)
+    featureImportance = pd.read_csv(featureName)
+    i = 0
     for clf, param, file in modelFactory('train'):
         clf = GridSearchCV(estimator = clf, param_grid = param, 
                         scoring = 'precision', n_jobs = 1, 
                         cv = StratifiedKFold(y, 3))
         clf.fit(X, y)
         clf = clf.best_estimator_
+        try:
+            featureImportance.loc[i] = clf.feature_importances_
+        except Exception:
+            pass
+        else:
+            i += 1
         y_pred = clf.predict(X)
-        # print (clf)
-        # print ('y_pred.sum(): ' + str(y_pred.sum()))
-        # print (classification_report(y, y_pred))
-        # print ('')
         showLearningCurve(clf, X, y)
         joblib.dump(clf, file)
+    featureImportance.loc['sum'] = featureImportance.sum()
+    featureImportance = featureImportance.stack().unstack(0)
+    featureImportance.sort_index(by = ['sum'], inplace = True)
+    featureImportance.to_csv(featureScore)
+    end = datetime.now()
+    print ('training end ', end)
+    print ('')
 
 def showLearningCurve(clf, X, y):
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
@@ -114,9 +136,6 @@ def showLearningCurve(clf, X, y):
              label="Cross-validation score")
     plt.legend(loc="best")
     plt.show()
-    # print (train_sizes)
-    # print (train_scores)
-    # print (valid_scores)
 
 def test():
     input(">> ")

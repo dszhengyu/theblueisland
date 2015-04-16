@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-ratio = 40
 pwd = 'z:\\theblueisland\\'
+featureName = pwd + 'feature_name.csv'
 
-def extractFeature_Pandas(day, random = 1, target = 0, ratio = 40, 
+def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32, 
                     prefix = pwd + "data_version2\\", 
                     prefix2 = pwd + "feature_label2\\"):
     if (target == 0):
@@ -45,59 +45,89 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 40,
     xTotalFeature.sort_index(axis = 1, inplace = True)
     xTotalFeature = xTotalFeature.add_prefix('x_total_')
     xTotalFeature.fillna(value = 0, inplace = True)
+    xTotalFeature13 = xTotalFeature.ix[:, ['x_total_1', 'x_total_3']]
+    # x 4 div all
+    xTotalFeature['4divall'] = xTotalFeature['x_total_4'] / xTotalFeature.sum(axis = 1)
     #last intersect
     xLastTimeFeature = xTotalGroup['time'].min().unstack('behavior_type')
     xLastTimeFeature.fillna(value = 10, inplace = True)
     xLastTimeFeature.sort_index(axis = 1, inplace = True)
     xLastTimeFeature = xLastTimeFeature.add_prefix('x_last_time_')
-    #rate   ATTENTION: inf is replace by median
-    xTotalFeature['4div1'] = xTotalFeature['x_total_4'].div(xTotalFeature['x_total_1'])
-    xTotalFeature[xTotalFeature['4div1'] == np.inf] = xTotalFeature['4div1'].median()
+    xLastTimeFeature13 = xLastTimeFeature.ix[ : , ['x_last_time_1', 'x_last_time_3']]
     #time relative
     xTimeGroup = u.groupby(['user_id', 'item_id', 'time', 'behavior_type'])
     xTimeFeature = xTimeGroup['item_category'].count()
     xTimeFeature = xTimeFeature.unstack(['time', 'behavior_type'])
     xTimeFeature.sort_index(axis = 1, inplace = True)
     xTimeFeature.fillna(value = 0, inplace = True)
-    # #every
-    # xevery2= [xTimeFeature[i] + xTimeFeature[i + 1] for i in range(0, 10, 2)]
-    # xevery2 = pd.concat(xevery2, axis = 1).add_prefix('x_every2_')
+    # 3 not 4
+    x_last1_3not4 = DataFrame(index = xTimeFeature[0].index)
+    x_last1_3not4_index = np.logical_and(xTimeFeature[0][4] == 0, xTimeFeature[0][3] != 0)
+    x_last1_3not4.ix[x_last1_3not4_index, 'x_last1_3not4'] = 1
+    x_last1_3not4.fillna(0, inplace = True)
     #last
-    xlast1 = xTimeFeature[0]
-    xlast3 = xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2]
-    # xlast5 = xlast3 + xTimeFeature[3] + xTimeFeature[4]
-    xT = pd.concat([xlast1, xlast3], axis = 1)
+    xlast1 = (xTimeFeature[0]).add_prefix('x_last_1')
+    xlast3 = (xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2]).add_prefix('x_last_3')
+    xlast5 = (xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2] 
+                + xTimeFeature[3] + xTimeFeature[4]).add_prefix('x_last_5')
+    # xT = pd.concat([xlast1, xlast3, xlast5], axis = 1)
+    xlast1_13 = xlast1.ix[ : , ['x_last_11', 'x_last_13']]
+    xlast3_13 = xlast3.ix[ : , ['x_last_31', 'x_last_33']]
+    xlast5_13 = xlast5.ix[ : , ['x_last_51', 'x_last_53']]
+    xT13 = pd.concat([xlast1_13, xlast3_13, xlast5_13], axis = 1)
     #sum up
-    xTotalFeature = pd.concat([xTotalFeature, xLastTimeFeature, xT], axis = 1)
+    xfeature = pd.concat([xTotalFeature13, xLastTimeFeature13, 
+                    xT13, xTotalFeature['4divall'], x_last1_3not4], axis = 1)
 
 ## USER
-    # total
+   # total
     uTotalGroup = u.groupby(['user_id', 'behavior_type'])
     uTotalFeature = uTotalGroup['item_id'].count().unstack('behavior_type')
     uTotalFeature.sort_index(axis = 1, inplace = True)
-    #count() is total while nunique() is unique number
     uTotalFeature = uTotalFeature.add_prefix('u_total_')
     uTotalFeature.fillna(0, inplace = True)
-    #last intersect
-    uLastTimeFeature = uTotalGroup['time'].min().unstack('behavior_type')
-    uLastTimeFeature.sort_index(axis = 1, inplace = True)
-    uLastTimeFeature = uLastTimeFeature.add_prefix('u_last_time_')
-    # #rate   ATTENTION: inf is replace by median
-    # uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
-    # uTotalFeature[uTotalFeature['4div1'] == np.inf] = uTotalFeature['4div1'].median()
-    # #time relative
-    # uTimeGroup = u.groupby(['user_id', 'time', 'behavior_type'])
-    # uTimeFeature = uTimeGroup['item_category'].count()
-    # uTimeFeature = uTimeFeature.unstack(['time', 'behavior_type'])
-    # uTimeFeature.sort_index(axis = 1, inplace = True)
-    # uTimeFeature.fillna(value = 0, inplace = True)
-    # #last
-    # ulast1 = uTimeFeature[0]
-    # ulast3 = uTimeFeature[0] + uTimeFeature[1] + uTimeFeature[2]
-    # ulast5 = ulast3 + uTimeFeature[3] + uTimeFeature[4]
-    # uT = pd.concat([ulast1, ulast3, ulast5], axis = 1)
+    # nunique()
+    uTotalUnique = uTotalGroup['item_id'].nunique().unstack('behavior_type')
+    uTotalUnique.sort_index(axis = 1, inplace = True)
+    uTotalUnique = uTotalUnique.add_prefix('u_unique_')
+    uTotalUnique.fillna(0, inplace = True)
+    # item rate
+    uTotalFeature['average_1'] = uTotalFeature['u_total_1'] / uTotalUnique['u_unique_1']
+    uTotalFeature[uTotalFeature['average_1']  == np.inf] = 0
+    uTotalFeature['average_2'] = uTotalFeature['u_total_2'] / uTotalUnique['u_unique_2']
+    uTotalFeature[uTotalFeature['average_2']  == np.inf] = 0
+    uTotalFeature['average_3'] = uTotalFeature['u_total_3'] / uTotalUnique['u_unique_3']
+    uTotalFeature[uTotalFeature['average_3']  == np.inf] = 0
+    uTotalFeature['average_4'] = uTotalFeature['u_total_4'] / uTotalUnique['u_unique_4']
+    uTotalFeature[uTotalFeature['average_4']  == np.inf] = 0
+    # 4 div 1
+    uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
+    uTotalFeature[uTotalFeature['4div1'] == np.inf] = 0
+    # 4 div all
+    uTotalFeature['4divall'] = uTotalFeature['u_total_4'] / uTotalFeature.sum(axis = 1)
+    # 3 div 1
+    uTotalFeature['3div1'] = uTotalFeature['u_total_3'].div(uTotalFeature['u_total_1'])
+    uTotalFeature[uTotalFeature['3div1'] == np.inf] = 0
+    # 3 div all
+    uTotalFeature['3divall'] = uTotalFeature['u_total_3'] / uTotalFeature.sum(axis = 1)
+    # 4 div 3
+    uTotalFeature['4div3'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_3'])
+    uTotalFeature[uTotalFeature['4div3'] == np.inf] = 0
+    uTotalFeature.fillna(0, inplace = True)
+    #time relative
+    uTimeGroup = u.groupby(['user_id', 'time', 'behavior_type'])
+    uTimeFeature = uTimeGroup['item_category'].count()
+    uTimeFeature = uTimeFeature.unstack(['time', 'behavior_type'])
+    uTimeFeature.sort_index(axis = 1, inplace = True)
+    uTimeFeature.fillna(value = 0, inplace = True)
+    #last
+    ulast1 = (uTimeFeature[0]).add_prefix('u_last_1')
+    ulast3 = (uTimeFeature[0] + uTimeFeature[1] + uTimeFeature[2]).add_prefix('u_last_3')
+    ulast5 = (uTimeFeature[0] + uTimeFeature[1] + uTimeFeature[2] 
+                + uTimeFeature[3] + uTimeFeature[4]).add_prefix('u_last_5')
+    uT = pd.concat([ulast1, ulast3, ulast5], axis = 1)
     #sum up
-    uTotalFeature = pd.concat([uTotalFeature, uLastTimeFeature], axis = 1)
+    ufeature = pd.concat([uTotalFeature, uTotalUnique, uT], axis = 1)
 ## ITEM
     # total
     i = pd.read_csv(ifile, names = columns, parse_dates = [5])
@@ -106,31 +136,43 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 40,
     iTotalFeature = iTotalGroup['user_id'].count().unstack('behavior_type')
     iTotalFeature.sort_index(axis = 1, inplace = True)
     iTotalFeature = iTotalFeature.add_prefix('i_total_')
+    iTotalFeature13 = iTotalFeature.ix[:, ['i_total_1', 'i_total_3']]
+    # i nunique()
+    iTotalUnique = iTotalGroup['user_id'].agg(lambda x: len(x.unique())).unstack('behavior_type')
+    iTotalUnique.sort_index(axis = 1, inplace = True)
+    iTotalUnique = iTotalUnique.add_prefix('i_unique_')
+    iTotalUnique.fillna(value = 0, inplace = True)
+    #rate
+    iTotalFeature['4divall'] = iTotalFeature['i_total_4'] / iTotalFeature.sum(axis = 1)
     #last intersect
     iLastTimeFeature = iTotalGroup['time'].min().unstack('behavior_type')
     iLastTimeFeature.sort_index(axis = 1, inplace = True)
     iLastTimeFeature = iLastTimeFeature.add_prefix('i_last_time_')
-    # # time relative
-    # iTimeGroup = u.groupby(['item_id', 'time', 'behavior_type'])
-    # iTimeFeature = iTimeGroup['item_category'].count()
-    # iTimeFeature = iTimeFeature.unstack(['time', 'behavior_type'])
-    # iTimeFeature.sort_index(axis = 1, inplace = True)
-    # iTimeFeature.fillna(value = 0, inplace = True)
-    # #every
-    # ievery2 = [iTimeFeature[i] + iTimeFeature[i + 1] for i in range(0, 10, 2)]
-    # ievery2 = pd.concat(ievery2, axis = 1).add_prefix('i_every2_')
-    # #last
-    # ilast1 = iTimeFeature[0]
-    # ilast3 = iTimeFeature[0] + iTimeFeature[1] + iTimeFeature[2]
-    # ilast5 = ilast3 + iTimeFeature[3] + iTimeFeature[4]
-    # iT = pd.concat([ilast1, ilast3, ilast5], axis = 1)
+    iLastTimeFeature13 = iLastTimeFeature.ix[ : , ['i_last_time_1', 'i_last_time_3']]
+    # time relative
+    iTimeGroup = u.groupby(['item_id', 'time', 'behavior_type'])
+    iTimeFeature = iTimeGroup['item_category'].count()
+    iTimeFeature = iTimeFeature.unstack(['time', 'behavior_type'])
+    iTimeFeature.sort_index(axis = 1, inplace = True)
+    iTimeFeature.fillna(value = 0, inplace = True)
+    #last
+    ilast1 = (iTimeFeature[0]).add_prefix('i_last_1')
+    ilast3 = (iTimeFeature[0] + iTimeFeature[1] + iTimeFeature[2]).add_prefix('i_last_3')
+    ilast5 = (iTimeFeature[0] + iTimeFeature[1] + iTimeFeature[2] 
+                + iTimeFeature[3] + iTimeFeature[4]).add_prefix('i_last_5')
+    iT = pd.concat([ilast1, ilast3, ilast5], axis = 1)
+    ilast1_1 = ilast1['i_last_11']
+    ilast3_1 = ilast3['i_last_31']
+    ilast5_1 = ilast5['i_last_51']
+    iT1 = pd.concat([ilast1_1, ilast3_1, ilast5_1], axis = 1)
     #sum up
-    iTotalFeature = pd.concat([iTotalFeature, iLastTimeFeature], axis = 1)
+    ifeature = pd.concat([iTotalFeature13, iTotalFeature['4divall'], 
+                            iLastTimeFeature13, iT1, iTotalUnique], axis = 1)
     
 ## COMBINE
-    finalXy = pd.merge(xTotalFeature, iTotalFeature, how = 'left', 
+    finalXy = pd.merge(xfeature, ifeature, how = 'left', 
                             left_index = True, right_index = True, sort = False)
-    finalXy = pd.merge(finalXy, uTotalFeature, how = 'left', 
+    finalXy = pd.merge(finalXy, ufeature, how = 'left', 
                             left_index = True, right_index = True, sort = False)
     finalXy.fillna(0, inplace = True)
 ##LABEL & RANDOM
@@ -162,6 +204,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 40,
         finalXy.drop(['user_id', 'item_id'], axis = 1, inplace = True)
 #done, write into file
     finalXy.to_csv(featureDay, na_rep = '0', index = False, header = False)
+    finalXy[ : 0].to_csv(featureName, na_rep = '0', index = False, header = True)
 ##pandas end
     
     endTime = datetime.now()
