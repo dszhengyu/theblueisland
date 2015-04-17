@@ -67,19 +67,17 @@ def onlineSet(norule = 1):
     y_pred = clf.predict(X)
     y_pred = np.logical_and(y_pred, y_pred)
     i = 1
-    scores = score
     y.loc[y_pred, i] = score
     print (y_pred.sum())
     for clf, score in modelFactory('predict')[1 : ]:
         y_pred = clf.predict(X)
         y_pred = np.logical_and(y_pred, y_pred)
         i += 1
-        scores += score
         y.loc[y_pred, i] = score
         print (y_pred.sum())
     y.fillna(value = 0, inplace = True)
     print ('online set before rule: ' 
-            + str((y.ix[ : , 1 :].sum(axis = 1) >= scores).sum()))
+            + str((y.ix[ : , 1 :].sum(axis = 1) >= onlineThreshold).sum()))
     # add rule
     if (norule == 0):
         rule = pd.read_csv(ruleFile, names = ['user_id', 'item_id'])

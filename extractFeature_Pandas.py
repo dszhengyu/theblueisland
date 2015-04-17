@@ -4,7 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 
 pwd = 'z:\\theblueisland\\'
-featureName = pwd + 'feature_name.csv'
+featureName = pwd + 'feature_label2\\feature_name.csv'
 
 def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32, 
                     prefix = pwd + "data_version2\\", 
@@ -47,7 +47,10 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     xTotalFeature.fillna(value = 0, inplace = True)
     xTotalFeature13 = xTotalFeature.ix[:, ['x_total_1', 'x_total_3']]
     # x 4 div all
-    xTotalFeature['4divall'] = xTotalFeature['x_total_4'] / xTotalFeature.sum(axis = 1)
+    xTotalFeature['x_4divall'] = xTotalFeature['x_total_4'] / xTotalFeature.sum(axis = 1)
+    # 4 div 1
+    xTotalFeature['x_4div1'] = xTotalFeature['x_total_4'].div(xTotalFeature['x_total_1'])
+    xTotalFeature[xTotalFeature['x_4div1'] == np.inf] = 0
     #last intersect
     xLastTimeFeature = xTotalGroup['time'].min().unstack('behavior_type')
     xLastTimeFeature.fillna(value = 10, inplace = True)
@@ -77,7 +80,8 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     xT13 = pd.concat([xlast1_13, xlast3_13, xlast5_13], axis = 1)
     #sum up
     xfeature = pd.concat([xTotalFeature13, xLastTimeFeature13, 
-                    xT13, xTotalFeature['4divall'], x_last1_3not4], axis = 1)
+                    xT13, xTotalFeature['x_4divall'], xTotalFeature['x_4div1'], 
+                        x_last1_3not4], axis = 1)
 
 ## USER
    # total
@@ -92,27 +96,23 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     uTotalUnique = uTotalUnique.add_prefix('u_unique_')
     uTotalUnique.fillna(0, inplace = True)
     # item rate
-    uTotalFeature['average_1'] = uTotalFeature['u_total_1'] / uTotalUnique['u_unique_1']
-    uTotalFeature[uTotalFeature['average_1']  == np.inf] = 0
-    uTotalFeature['average_2'] = uTotalFeature['u_total_2'] / uTotalUnique['u_unique_2']
-    uTotalFeature[uTotalFeature['average_2']  == np.inf] = 0
-    uTotalFeature['average_3'] = uTotalFeature['u_total_3'] / uTotalUnique['u_unique_3']
-    uTotalFeature[uTotalFeature['average_3']  == np.inf] = 0
-    uTotalFeature['average_4'] = uTotalFeature['u_total_4'] / uTotalUnique['u_unique_4']
-    uTotalFeature[uTotalFeature['average_4']  == np.inf] = 0
+    uTotalFeature['u_average_1'] = uTotalFeature['u_total_1'] / uTotalUnique['u_unique_1']
+    uTotalFeature[uTotalFeature['u_average_1']  == np.inf] = 0
+    uTotalFeature['u_average_3'] = uTotalFeature['u_total_3'] / uTotalUnique['u_unique_3']
+    uTotalFeature[uTotalFeature['u_average_3']  == np.inf] = 0
     # 4 div 1
-    uTotalFeature['4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
-    uTotalFeature[uTotalFeature['4div1'] == np.inf] = 0
+    uTotalFeature['u_4div1'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_1'])
+    uTotalFeature[uTotalFeature['u_4div1'] == np.inf] = 0
     # 4 div all
-    uTotalFeature['4divall'] = uTotalFeature['u_total_4'] / uTotalFeature.sum(axis = 1)
+    uTotalFeature['u_4divall'] = uTotalFeature['u_total_4'] / uTotalFeature.sum(axis = 1)
     # 3 div 1
-    uTotalFeature['3div1'] = uTotalFeature['u_total_3'].div(uTotalFeature['u_total_1'])
-    uTotalFeature[uTotalFeature['3div1'] == np.inf] = 0
+    uTotalFeature['u_3div1'] = uTotalFeature['u_total_3'].div(uTotalFeature['u_total_1'])
+    uTotalFeature[uTotalFeature['u_3div1'] == np.inf] = 0
     # 3 div all
-    uTotalFeature['3divall'] = uTotalFeature['u_total_3'] / uTotalFeature.sum(axis = 1)
+    uTotalFeature['u_3divall'] = uTotalFeature['u_total_3'] / uTotalFeature.sum(axis = 1)
     # 4 div 3
-    uTotalFeature['4div3'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_3'])
-    uTotalFeature[uTotalFeature['4div3'] == np.inf] = 0
+    uTotalFeature['u_4div3'] = uTotalFeature['u_total_4'].div(uTotalFeature['u_total_3'])
+    uTotalFeature[uTotalFeature['u_4div3'] == np.inf] = 0
     uTotalFeature.fillna(0, inplace = True)
     #time relative
     uTimeGroup = u.groupby(['user_id', 'time', 'behavior_type'])
@@ -126,8 +126,18 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     ulast5 = (uTimeFeature[0] + uTimeFeature[1] + uTimeFeature[2] 
                 + uTimeFeature[3] + uTimeFeature[4]).add_prefix('u_last_5')
     uT = pd.concat([ulast1, ulast3, ulast5], axis = 1)
+    # ulast 1
+    ulast1_1 = ulast1['u_last_11']
+    ulast3_1 = ulast3['u_last_31']
+    ulast5_1 = ulast5['u_last_51']
+    uT1 = pd.concat([ulast1_1, ulast3_1, ulast5_1], axis = 1)
+    # u active days
+    uSingleGroup = u.groupby(['user_id'])
+    uActiveDays = uSingleGroup['time'].nunique()
+    # u active in 1, 3, 5 days
+    # TO-DO
     #sum up
-    ufeature = pd.concat([uTotalFeature, uTotalUnique, uT], axis = 1)
+    ufeature = pd.concat([uTotalFeature, uTotalUnique, uT1, uActiveDays], axis = 1)
 ## ITEM
     # total
     i = pd.read_csv(ifile, names = columns, parse_dates = [5])
@@ -137,13 +147,13 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     iTotalFeature.sort_index(axis = 1, inplace = True)
     iTotalFeature = iTotalFeature.add_prefix('i_total_')
     iTotalFeature13 = iTotalFeature.ix[:, ['i_total_1', 'i_total_3']]
-    # i nunique()
-    iTotalUnique = iTotalGroup['user_id'].agg(lambda x: len(x.unique())).unstack('behavior_type')
-    iTotalUnique.sort_index(axis = 1, inplace = True)
-    iTotalUnique = iTotalUnique.add_prefix('i_unique_')
-    iTotalUnique.fillna(value = 0, inplace = True)
+    # # i nunique()
+    # iTotalUnique = iTotalGroup['user_id'].agg(lambda x: len(x.unique())).unstack('behavior_type')
+    # iTotalUnique.sort_index(axis = 1, inplace = True)
+    # iTotalUnique = iTotalUnique.add_prefix('i_unique_')
+    # iTotalUnique.fillna(value = 0, inplace = True)
     #rate
-    iTotalFeature['4divall'] = iTotalFeature['i_total_4'] / iTotalFeature.sum(axis = 1)
+    iTotalFeature['i_4divall'] = iTotalFeature['i_total_4'] / iTotalFeature.sum(axis = 1)
     #last intersect
     iLastTimeFeature = iTotalGroup['time'].min().unstack('behavior_type')
     iLastTimeFeature.sort_index(axis = 1, inplace = True)
@@ -166,8 +176,8 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     ilast5_1 = ilast5['i_last_51']
     iT1 = pd.concat([ilast1_1, ilast3_1, ilast5_1], axis = 1)
     #sum up
-    ifeature = pd.concat([iTotalFeature13, iTotalFeature['4divall'], 
-                            iLastTimeFeature13, iT1, iTotalUnique], axis = 1)
+    ifeature = pd.concat([iTotalFeature13, iTotalFeature['i_4divall'], 
+                            iLastTimeFeature13, iT1], axis = 1)
     
 ## COMBINE
     finalXy = pd.merge(xfeature, ifeature, how = 'left', 

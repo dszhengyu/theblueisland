@@ -16,7 +16,7 @@ from sklearn.externals import joblib
 from extractFeature_Pandas import featureName
 from rockup import pwd
 
-featureName = pwd + 'feature_name.csv'
+featureName = pwd + 'feature_label2\\feature_name.csv'
 featureScore = pwd + 'feature_score.csv'
 prefix = pwd + "feature_label2\\"
 model = pwd + 'model\\'
@@ -69,19 +69,25 @@ def modelFactory(option):
         clf1 = LogisticRegression(class_weight = 'auto')
         param1 = {'C' : [0.001, 0.03, 0.9, 27, 100, 300], 
                     'penalty' : ['l1', 'l2']}
-        clf2 = RandomForestClassifier()
-        param2 = {'n_estimators' : [i for i in range(50, 120, 30)]}
+        clf2 = RandomForestClassifier(n_jobs = -1)
+        param2 = {'n_estimators' : [50, 100, 150],
+                    'max_features' : ['auto', 'log2'],
+                    'min_samples_split' : [1, 2],
+                    'criterion' : ['gini', 'entropy']}
         clf3 = GradientBoostingClassifier()
-        param3 = {'n_estimators' : [i for i in range(100, 200, 50)]}
+        param3 = {'n_estimators' : [i for i in range(100, 300, 60)], 
+                    'learning_rate' : [0.001, 0.01, 0.1],
+                    'max_features' : ['auto', 'log2'],
+                    'loss' : ['deviance', 'exponential']}
         return [(clf1, param1, clf1File), (clf2, param2, clf2File), 
                     (clf3, param3, clf3File)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
         clf1Score = 1
         clf2 = joblib.load(clf2File)
-        clf2Score = 1
+        clf2Score = 2
         clf3 = joblib.load(clf3File)
-        clf3Score = 1
+        clf3Score = 2
         return [(clf1, clf1Score), (clf2, clf2Score), (clf3, clf3Score)]
         
 def gridTrain(X, y):
@@ -91,7 +97,7 @@ def gridTrain(X, y):
     i = 0
     for clf, param, file in modelFactory('train'):
         clf = GridSearchCV(estimator = clf, param_grid = param, 
-                        scoring = 'precision', n_jobs = 1, 
+                        scoring = 'f1', n_jobs = 1, 
                         cv = StratifiedKFold(y, 3))
         clf.fit(X, y)
         clf = clf.best_estimator_

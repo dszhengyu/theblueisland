@@ -73,6 +73,9 @@ xTotalFeature = pd.concat([xTotalFeature13, xLastTimeFeature13,
                 xT13, xTotalFeature['4divall'], x_last1_3not4], axis = 1)
                     
 ## USER
+# u active days
+uSingleGroup = u.groupby(['user_id'])
+uActiveDays = uSingleGroup['time'].nunique()
 # total
 uTotalGroup = u.groupby(['user_id', 'behavior_type'])
 uTotalFeature = uTotalGroup['item_id'].count().unstack('behavior_type')
@@ -120,7 +123,7 @@ ulast5 = (uTimeFeature[0] + uTimeFeature[1] + uTimeFeature[2]
             + uTimeFeature[3] + uTimeFeature[4]).add_prefix('u_last_5')
 uT = pd.concat([ulast1, ulast3, ulast5], axis = 1)
 #sum up
-ufeature = pd.concat([uTotalFeature, uTotalUnique, uT], axis = 1)
+ufeature = pd.concat([uTotalFeature, uTotalUnique, uT, uActiveDays], axis = 1)
 ## ITEM
 # total
 i = pd.read_csv(ifile, names = columns, parse_dates = [5])
