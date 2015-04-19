@@ -80,8 +80,8 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     xT13 = pd.concat([xlast1_13, xlast3_13, xlast5_13], axis = 1)
     #sum up
     xfeature = pd.concat([xTotalFeature13, xLastTimeFeature13, 
-                    xT13, xTotalFeature['x_4divall'], xTotalFeature['x_4div1'], 
-                        x_last1_3not4], axis = 1)
+                            xT13, xTotalFeature['x_4divall'], xTotalFeature['x_4div1'], 
+                            x_last1_3not4], axis = 1)
 
 ## USER
    # total
@@ -131,13 +131,13 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     ulast3_1 = ulast3['u_last_31']
     ulast5_1 = ulast5['u_last_51']
     uT1 = pd.concat([ulast1_1, ulast3_1, ulast5_1], axis = 1)
-    # u active days
-    uSingleGroup = u.groupby(['user_id'])
-    uActiveDays = uSingleGroup['time'].nunique()
+    # # u active days
+    # uSingleGroup = u.groupby(['user_id'])
+    # uActiveDays = uSingleGroup['time'].nunique()
     # u active in 1, 3, 5 days
     # TO-DO
     #sum up
-    ufeature = pd.concat([uTotalFeature, uTotalUnique, uT1, uActiveDays], axis = 1)
+    ufeature = pd.concat([uTotalFeature, uTotalUnique, uT1], axis = 1)
 ## ITEM
     # total
     i = pd.read_csv(ifile, names = columns, parse_dates = [5])
@@ -154,11 +154,11 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     # iTotalUnique.fillna(value = 0, inplace = True)
     #rate
     iTotalFeature['i_4divall'] = iTotalFeature['i_total_4'] / iTotalFeature.sum(axis = 1)
-    #last intersect
-    iLastTimeFeature = iTotalGroup['time'].min().unstack('behavior_type')
-    iLastTimeFeature.sort_index(axis = 1, inplace = True)
-    iLastTimeFeature = iLastTimeFeature.add_prefix('i_last_time_')
-    iLastTimeFeature13 = iLastTimeFeature.ix[ : , ['i_last_time_1', 'i_last_time_3']]
+    # #last intersect
+    # iLastTimeFeature = iTotalGroup['time'].min().unstack('behavior_type')
+    # iLastTimeFeature.sort_index(axis = 1, inplace = True)
+    # iLastTimeFeature = iLastTimeFeature.add_prefix('i_last_time_')
+    # iLastTimeFeature13 = iLastTimeFeature.ix[ : , ['i_last_time_1', 'i_last_time_3']]
     # time relative
     iTimeGroup = u.groupby(['item_id', 'time', 'behavior_type'])
     iTimeFeature = iTimeGroup['item_category'].count()
@@ -176,8 +176,7 @@ def extractFeature_Pandas(day, random = 1, target = 0, ratio = 32,
     ilast5_1 = ilast5['i_last_51']
     iT1 = pd.concat([ilast1_1, ilast3_1, ilast5_1], axis = 1)
     #sum up
-    ifeature = pd.concat([iTotalFeature13, iTotalFeature['i_4divall'], 
-                            iLastTimeFeature13, iT1], axis = 1)
+    ifeature = pd.concat([iTotalFeature13, iTotalFeature['i_4divall'], iT1], axis = 1)
     
 ## COMBINE
     finalXy = pd.merge(xfeature, ifeature, how = 'left', 

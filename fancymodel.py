@@ -67,27 +67,28 @@ def modelFactory(option):
     clf3File = model + 'clfPickle3.plk'
     if (option == 'train'):
         clf1 = LogisticRegression(class_weight = 'auto')
-        param1 = {'C' : [0.001, 0.03, 0.9, 27, 100, 300], 
+        param1 = {'C' : [0.001, 0.03, 0.9, 27, 60, 100], 
                     'penalty' : ['l1', 'l2']}
         clf2 = RandomForestClassifier(n_jobs = -1)
-        param2 = {'n_estimators' : [50, 100, 150],
+        param2 = {'n_estimators' : [50, 150, 250],
                     'max_features' : ['auto', 'log2'],
                     'min_samples_split' : [1, 2],
-                    'criterion' : ['gini', 'entropy']}
+                    'criterion' : ['gini', 'entropy'], 
+                    'max_depth' : [3, 8, 11, 25, 100]}
         clf3 = GradientBoostingClassifier()
-        param3 = {'n_estimators' : [i for i in range(100, 300, 60)], 
+        param3 = {'n_estimators' : [150, 250, 350, 450], 
                     'learning_rate' : [0.001, 0.01, 0.1],
-                    'max_features' : ['auto', 'log2'],
-                    'loss' : ['deviance', 'exponential']}
+                    'max_features' : ['auto', 'log2'], 
+                    'max_depth' : [3, 5, 8, 11]}
         return [(clf1, param1, clf1File), (clf2, param2, clf2File), 
                     (clf3, param3, clf3File)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
         clf1Score = 1
         clf2 = joblib.load(clf2File)
-        clf2Score = 2
+        clf2Score = 1
         clf3 = joblib.load(clf3File)
-        clf3Score = 2
+        clf3Score = 1
         return [(clf1, clf1Score), (clf2, clf2Score), (clf3, clf3Score)]
         
 def gridTrain(X, y):
