@@ -17,7 +17,7 @@ from extractFeature_Pandas import featureName
 from rockup import pwd
 
 featureName = pwd + 'feature_label2\\feature_name.csv'
-featureScore = pwd + 'feature_score.csv'
+featureScore = pwd + 'featurescore\\' + str(datetime.now()).replace(':', '-') + '.csv'
 prefix = pwd + "feature_label2\\"
 model = pwd + 'model\\'
 
@@ -67,21 +67,17 @@ def modelFactory(option):
     clf3File = model + 'clfPickle3.plk'
     if (option == 'train'):
         clf1 = LogisticRegression(class_weight = 'auto')
-        param1 = {'C' : [0.001, 0.03, 0.9, 27, 60, 100], 
-                    'penalty' : ['l1', 'l2']}
+        param1 = {'C' : [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 100]}
+        job1 = 3
         clf2 = RandomForestClassifier(n_jobs = -1)
-        param2 = {'n_estimators' : [50, 150, 250],
-                    'max_features' : ['auto', 'log2'],
-                    'min_samples_split' : [1, 2],
-                    'criterion' : ['gini', 'entropy'], 
-                    'max_depth' : [3, 8, 11, 25, 100]}
+        param2 = {'n_estimators' : [40, 50, 60, 70],
+                    'max_depth' : [6, 7, 8, 9, 10]}
+        job2 = 1
         clf3 = GradientBoostingClassifier()
-        param3 = {'n_estimators' : [150, 250, 350, 450], 
-                    'learning_rate' : [0.001, 0.01, 0.1],
-                    'max_features' : ['auto', 'log2'], 
-                    'max_depth' : [3, 5, 8, 11]}
-        return [(clf1, param1, clf1File), (clf2, param2, clf2File), 
-                    (clf3, param3, clf3File)]
+        param3 = {'n_estimators' : [100, 200, 300]}
+        job3= 3
+        return [(clf1, param1, clf1File, job1), (clf2, param2, clf2File, job2), 
+                (clf3, param3, clf3File, job3)]
     elif (option == 'predict'):
         clf1 = joblib.load(clf1File)
         clf1Score = 1
@@ -96,10 +92,11 @@ def gridTrain(X, y):
     print ('training start ', begin)
     featureImportance = pd.read_csv(featureName)
     i = 0
-    for clf, param, file in modelFactory('train'):
+    for clf, param, file, job in modelFactory('train'):
         clf = GridSearchCV(estimator = clf, param_grid = param, 
-                        scoring = 'f1', n_jobs = 1, 
-                        cv = StratifiedKFold(y, 3))
+                        scoring = 'f1', n_jobs = job, 
+                        cv = StratifiedKFold(y, 3), 
+                        verbose = 3, pre_dispatch = '3*n_jobs')
         clf.fit(X, y)
         clf = clf.best_estimator_
         try:
@@ -108,21 +105,30 @@ def gridTrain(X, y):
             pass
         else:
             i += 1
+        print (clf)
         y_pred = clf.predict(X)
-        showLearningCurve(clf, X, y)
+        print (classification_report(y, y_pred))
+        print ()
         joblib.dump(clf, file)
     featureImportance.loc['sum'] = featureImportance.sum()
     featureImportance = featureImportance.stack().unstack(0)
     featureImportance.sort_index(by = ['sum'], inplace = True)
     featureImportance.to_csv(featureScore)
+    for clf, score in modelFactory('predict'):
+        showLearningCurve(clf, X, y)
     end = datetime.now()
     print ('training end ', end)
-    print ('')
+    print ()
 
 def showLearningCurve(clf, X, y):
+    print ('calculate to print learning curve' + str(datetime.now()))
     train_sizes, train_scores, valid_scores = learning_curve(clf, X, y,
-                                                             cv = StratifiedKFold(y, 3),
-                                                             n_jobs = 1)
+                                                            train_sizes = 
+                                                            np.array([ 0.1, 0.55, 1.]), 
+                                                            scoring = 'f1',
+                                                            cv = StratifiedKFold(y, 3),
+                                                            n_jobs = 3)
+    print ('start painting learning curve' + str(datetime.now()))
     plt.figure()
     plt.title('learning curve')
     plt.xlabel("Training examples")

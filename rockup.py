@@ -1,9 +1,10 @@
 from extractFeature import extractFeature
 from fancymodel import *
 from extractFeature_Pandas import extractFeature_Pandas
-from damnrule import ruleFile
+# from damnrule import ruleFile
 
 pwd = 'z:\\theblueisland\\'
+onlineset = pwd + 'onlineset\\'
 ruleScore = 1
 trainthreshold = 3
 onlineThreshold = 3
@@ -98,10 +99,13 @@ def onlineSet(norule = 1):
     # into file
     online.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
                                 na_rep = '0', index = False, header = True)
+    online.ix[ :, : -1].to_csv(onlineset + str(len(online)) + '@@' +
+                                str(datetime.now()).replace(':', '-') + '.csv',  
+                                na_rep = '0', index = False, header = True)                    
 
 def test():
     updateFeature('11_18', 10)
-    extractFeature_Pandas('12_8', 0)
+    extractFeature_Pandas('12_8', test = 1)
     extractFeature_Pandas('target', target = 1)
     train('11_18', 10)
     localTest()

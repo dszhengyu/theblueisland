@@ -41,7 +41,7 @@ into outfile 'z:\\theblueisland\\i_target.csv'
 fields terminated by ',' optionally enclosed by '"' escaped by '"' 
 lines terminated by '\n'; 
 
-select item_id from _train_item
+select distinct item_id, item_category from _train_item
 into outfile 'z:\\theblueisland\\subItem.csv' 
-fields terminated by ',' optionally enclosed by '"' escaped by '"' 
+fields terminated by ','
 lines terminated by '\n'; 

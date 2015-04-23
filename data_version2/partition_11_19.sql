@@ -31,7 +31,7 @@ insert into u_11_19
     where time >= @d1 and time < @d2
     order by user_id, item_id;
  
- insert into i_11_19
+insert into i_11_19
 	select *
     from _train_user
     where time >= @d1 and time < @d2
