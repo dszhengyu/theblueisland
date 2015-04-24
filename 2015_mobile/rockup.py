@@ -8,6 +8,8 @@ onlineset = pwd + 'onlineset\\'
 ruleScore = 1
 trainthreshold = 3
 onlineThreshold = 3
+item_trainthreshold = 2
+item_threshold = 2
 
 def updateFeature(begin = '11_18', days = 1, target = 0):
     f = open('update_feature_log.log', 'w')
@@ -24,15 +26,19 @@ def updateFeature(begin = '11_18', days = 1, target = 0):
         f.flush()
     f.close()
 
-def train(begin = '11_18', days = 1):
+def train(begin = '11_18', days = 2):
     X, y = generateXy(begin, days)  
     gridTrain(X, y)
+    item_X, item_y = item_generateXY(begin, days)
+    item_gridTrain(item_X, item_y)
  
 def localTest():   
     'test on the local set'
+    # original test on <u, i>
+    index = ['user_id', 'item_id']
     X_test = np.load(pwd + 'X_test.npy')
     y_test = np.load(pwd + 'y_test.npy')
-    y = pd.DataFrame(index = range(len(X_test)))
+    y = pd.read_csv(prefix + "test_example_12_8.csv", names = index)
     clf, score= modelFactory('predict')[0]
     y_pred = clf.predict(X_test)
     y_pred = np.logical_and(y_pred, y_pred)
@@ -52,10 +58,41 @@ def localTest():
         print (classification_report(y_test, y_pred))
         print ('')
     y.fillna(value = 0, inplace = True)
-    y = y.sum(axis = 1) >= trainthreshold
+    y['yes'] = 0
+    y.ix[y.ix[ : , 1 :].sum(axis = 1) >= trainthreshold, 'yes'] = 1
     print ('final predict:')
-    print ('y_pred: ' + str(y.sum()))
-    print (classification_report(y_test, y))
+    print ('y_pred: ' + str(y['yes'].sum()))
+    print (classification_report(y_test, y['yes']))
+    
+    #test on <i>
+    item_X_test = np.load(pwd + 'item_X_test.npy')
+    item_y_test = np.load(pwd + 'item_y_test.npy')
+    clf, score= item_modelFactory('predict')[0]
+    item_y_pred = clf.predict(item_X_test)
+    item_y_pred = np.logical_and(item_y_pred, item_y_pred)
+    i = 1
+    item_y = pd.read_csv(prefix + "test_item_label12_8.csv")
+    item_y.drop('buy', inplace = True, axis = 1) 
+    item_y.loc[item_y_pred, i] = score
+    print (clf)
+    print ('item_y_pred: ' + str(item_y_pred.sum()))
+    print (classification_report(item_y_test, item_y_pred))
+    print ('')
+    for clf, score in item_modelFactory('predict')[1 : ]:
+        item_y_pred = clf.predict(item_X_test)
+        item_y_pred = np.logical_and(item_y_pred, item_y_pred)
+        i += 1
+        item_y.loc[item_y_pred, i] = score
+        print (clf)
+        print ('item_y_pred: ' + str(item_y_pred.sum()))
+        print (classification_report(item_y_test, item_y_pred))
+        print ('')
+    item_y.fillna(value = 0, inplace = True)
+    item_y['yes2'] = 0
+    item_y.ix[item_y.ix[ : , 1 :].sum(axis = 1) >= item_trainthreshold, 'yes2'] = 1
+    print ('item_final predict:')
+    print ('item_y_pred: ' + str(item_y['yes2'].sum()))
+    print (classification_report(item_y_test, item_y['yes2']))
     
 def onlineSet(norule = 1):
     index = ['user_id', 'item_id']
@@ -79,12 +116,6 @@ def onlineSet(norule = 1):
     y.fillna(value = 0, inplace = True)
     print ('online set before rule: ' 
             + str((y.ix[ : , 1 :].sum(axis = 1) >= onlineThreshold).sum()))
-    # add rule
-    if (norule == 0):
-        rule = pd.read_csv(ruleFile, names = ['user_id', 'item_id'])
-        rule['rule'] = ruleScore
-        y = pd.merge(y, rule, how = 'outer')
-        y.fillna(value = 0, inplace = True)
     # threshold, get online
     online = y[y.ix[ : , 1 :].sum(axis = 1) >= onlineThreshold]
     online = online.ix[ : , 'user_id' : 'item_id']
@@ -95,6 +126,39 @@ def onlineSet(norule = 1):
     online = pd.merge(online, l)
     # remove the repeat (user_id, item_id)
     online.drop_duplicates(inplace = True)
+    print ('online cross with subitem: ' + str(len(online)))
+    
+    ## item
+    item_X =  pd.read_csv(prefix + 'item_feature_targettarget.csv', index_col = 'item_id')
+    item_y = pd.DataFrame(index = item_X.index)
+    item_X = MinMaxScaler().fit_transform(item_X)
+    
+    clf, score= item_modelFactory('predict')[0]
+    item_y_pred = clf.predict(item_X)
+    item_y_pred = np.logical_and(item_y_pred, item_y_pred)
+    i = 1
+    item_y.loc[item_y_pred, i] = score
+    print (clf)
+    print ('item_y_pred: ' + str(item_y_pred.sum()))
+    print ('')
+    for clf, score in item_modelFactory('predict')[1 : ]:
+        item_y_pred = clf.predict(item_X)
+        item_y_pred = np.logical_and(item_y_pred, item_y_pred)
+        i += 1
+        item_y.loc[item_y_pred, i] = score
+        print (clf)
+        print ('item_y_pred: ' + str(item_y_pred.sum()))
+        print ('')
+    item_y.fillna(value = 0, inplace = True)
+    item_y['yes'] = 0
+    item_y.ix[item_y.ix[ : , 1 :].sum(axis = 1) >= item_threshold, 'yes'] = 1
+    item_y.fillna(value = 0, inplace = True)
+    finalItem = pd.DataFrame(index = item_y[item_y['yes'] != 0].index)
+    print ('item_y_pred final: ' + str(len(finalItem)))
+    
+    # online = pd.merge(online, finalItem, left_on = 'item_id', right_index = True)
+    ##item
+    
     print ('online set final: ' + str(len(online)))
     # into file
     online.ix[ :, : -1].to_csv(pwd + 'tianchi_mobile_recommendation_predict.csv', 
@@ -104,10 +168,10 @@ def onlineSet(norule = 1):
                                 na_rep = '0', index = False, header = True)                    
 
 def test():
-    updateFeature('11_18', 10)
-    extractFeature_Pandas('12_8', test = 1)
-    extractFeature_Pandas('target', target = 1)
-    train('11_18', 10)
+    # updateFeature('11_18', 15)
+    # extractFeature_Pandas('12_8', test = 1)
+    # extractFeature_Pandas('target', target = 1)
+    train('11_18', 15)
     localTest()
     onlineSet()
     

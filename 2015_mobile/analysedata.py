@@ -224,13 +224,11 @@ def iConstructFeature():
     ifeature = pd.concat([iTotalFeature3, iTotalUnique3, 
                         iTotalFeature['i_3divall'], iLastTimeFeature13, 
                         iT13], axis = 1)
-                        
-                        
     #category
     categoryGroup = i.groupby(['item_category', 'behavior_type'])
     categoryTotal = categoryGroup['time'].count().unstack('behavior_type')
     categoryTotal = categoryTotal.add_prefix('c_total_')
-    categoryTotal.fillna(1, inplace = True)
+    categoryTotal.fillna(0, inplace = True)
     categoryTotal = categoryTotal.reset_index('item_category')
     categoryItemGroup = i.groupby(['item_category', 'item_id', 'behavior_type'])
     categoryItemTotal = categoryItemGroup['time'].count().unstack('behavior_type')
@@ -245,7 +243,14 @@ def iConstructFeature():
     categoryFeature['c_i_rate_2'] = categoryFeature['c_i_total_2'] / categoryFeature['c_total_2']
     categoryFeature['c_i_rate_3'] = categoryFeature['c_i_total_3'] / categoryFeature['c_total_3']
     categoryFeature['c_i_rate_4'] = categoryFeature['c_i_total_4'] / categoryFeature['c_total_4']
+    
+    categoryFeature['c_i_rate_1'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_2'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_3'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_4'] *= categoryFeature['c_total_4']
+    
     categoryFeatureRate = categoryFeature.ix[ : , 'c_i_rate_1' : 'c_i_rate_4']
+    categoryFeatureRate.fillna(0, inplace = True)
     #category done
     ifeature = pd.merge(ifeature, categoryFeatureRate, 
                         left_index = True, right_index = True, sort = False)
@@ -433,21 +438,21 @@ def featureSelect ():
     y = finalXy['buy']
     slt = SelectKBest(chi2, k = 10)
     slt.fit(X, y)
-    clf = RandomForestClassifier()
-    param = {'n_estimators' : [10, 25, 40, 50, 60, 70],
-                'max_depth' : [6, 7, 8, 9, 10, None]}
-    clf = GridSearchCV(estimator = clf, param_grid = param, 
-                        scoring = 'f1', 
-                        cv = StratifiedKFold(y, 3), 
-                        verbose = 3, pre_dispatch = '3*n_jobs')
-    clf.fit(X, y)
-    clf = clf.best_estimator_
-    y_pred = clf.predict(X)
-    print (classification_report(y, y_pred))
+    # clf = RandomForestClassifier()
+    # param = {'n_estimators' : [10, 25, 40, 50, 60, 70],
+    #             'max_depth' : [6, 7, 8, 9, 10, None]}
+    # clf = GridSearchCV(estimator = clf, param_grid = param, 
+    #                     scoring = 'f1', 
+    #                     cv = StratifiedKFold(y, 3), 
+    #                     verbose = 3, pre_dispatch = '3*n_jobs')
+    # clf.fit(X, y)
+    # clf = clf.best_estimator_
+    # y_pred = clf.predict(X)
+    # print (classification_report(y, y_pred))
     scoreList = DataFrame(columns = X.columns)
     scoreList.loc['SelectKBest_score'] = slt.scores_
     scoreList.loc['SelectKBest_pvalues'] = slt.pvalues_
-    scoreList.loc['RF_feature_importances'] = clf.feature_importances_
+    # scoreList.loc['RF_feature_importances'] = clf.feature_importances_
     scoreList = scoreList.stack().unstack(0)
     scoreList.to_csv(pwd + 'selection2.csv')
     

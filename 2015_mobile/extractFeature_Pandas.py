@@ -8,12 +8,12 @@ pwd = 'z:\\theblueisland\\'
 featureName = pwd + 'feature_label2\\feature_name.csv'
 test = 1
 target = 0
-ratio = 32
+ratio = 40
 prefix = pwd + "data_version2\\"
 prefix2 = pwd + "feature_label2\\"
 day = '12_8'
 
-def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32, 
+def extractFeature_Pandas(day, test = 0, target = 0, ratio = 40, 
                     prefix = pwd + "data_version2\\", 
                     prefix2 = pwd + "feature_label2\\"):
     if (target == 0):
@@ -25,14 +25,20 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
         if (test == 0):
             featureDay = prefix2 + "feature_" + day + ".csv"
             labelDay = prefix2 + "label_" + day + ".csv"
+            exampleDay = prefix2 + "example_" + day + ".csv"
+            itemFeature = prefix2 + "item_feature" + day + ".csv"
+            itemLabel = prefix2 + "item_label" + day + ".csv"
         else:
             featureDay = prefix2 + "test_feature_" + day + ".csv"
             labelDay = prefix2 + "test_label_" + day + ".csv"
-
+            exampleDay = prefix2 + "test_example_" + day + ".csv"
+            itemFeature = prefix2 + "test_item_feature" + day + ".csv"
+            itemLabel = prefix2 + "test_item_label" + day + ".csv"
     else:
         ufile = prefix + "u_target.csv"
         ifile = prefix + "i_target.csv"
         featureDay = prefix2 + "feature_target.csv"
+        itemFeature = prefix2 + "item_feature_target" + day + ".csv"
         examplefilename = prefix2 + "example_target.csv"
         uptime = datetime.strptime('2014_12_18 23:00:00', 
                                     "%Y_%m_%d %H:%M:%S")
@@ -106,9 +112,9 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
     xlast5 = (xTimeFeature[0] + xTimeFeature[1] + xTimeFeature[2] 
                 + xTimeFeature[3] + xTimeFeature[4]).add_prefix('x_last_5')
     xT = pd.concat([xlast1, xlast3, xlast5], axis = 1)
-    xlast1_13 = xlast1.ix[ : , ['x_last_11', 'x_last_13']]
-    xlast2_13 = xlast2.ix[ : , ['x_last_21', 'x_last_23']]
-    xlast3_13 = xlast3.ix[ : , ['x_last_31', 'x_last_33']]
+    xlast1_13 = xlast1.ix[ : , ['x_last_11']]
+    xlast2_13 = xlast2.ix[ : , ['x_last_21']]
+    xlast3_13 = xlast3.ix[ : , ['x_last_31']]
     xlast4_13 = xlast4.ix[ : , ['x_last_41', 'x_last_43']]
     xlast5_13 = xlast5.ix[ : , ['x_last_51', 'x_last_53']]
     xT13 = pd.concat([xlast1_13, xlast2_13, xlast3_13, xlast5_13], axis = 1)
@@ -209,16 +215,21 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
     iT = pd.concat([ilast1, ilast2, ilast3, ilast4, ilast5], axis = 1)
     ilast1_13 = ilast1.ix[:, ['i_last_11', 'i_last_13']]
     ilast3_13 = ilast3.ix[:, ['i_last_31', 'i_last_33']]
-    ilast5_13 = ilast5.ix[:, ['i_last_51', 'i_last_53']]
-    iT13 = pd.concat([ilast1_13, ilast3_13], axis = 1)
+    ilast5_13 = ilast3.ix[:, ['i_last_51', 'i_last_53']]
+    iT13 = pd.concat([ilast1_13, ilast3_13, ilast5_13], axis = 1)
     #sum up
-    ifeature = pd.concat([iTotalFeature, iTotalFeature['i_4divall'], ilast1_13], axis = 1)
+    ifeature = pd.concat([iTotalFeature4, iTotalFeature['i_4divall'], 
+                        iTotalFeature['i_3div1'], iTotalFeature['i_4div1'], 
+                        iTotalFeature['i_3divall'], iT13], axis = 1)
+    ifeature2 = pd.concat([iTotalFeature4, iTotalFeature['i_4divall'], 
+                        iTotalFeature['i_3div1'], iTotalFeature['i_4div1'], 
+                        iTotalFeature['i_3divall'], iT13], axis = 1)
     
     #category
     categoryGroup = i.groupby(['item_category', 'behavior_type'])
     categoryTotal = categoryGroup['time'].count().unstack('behavior_type')
     categoryTotal = categoryTotal.add_prefix('c_total_')
-    categoryTotal.fillna(1, inplace = True)
+    categoryTotal.fillna(0, inplace = True)
     categoryTotal = categoryTotal.reset_index('item_category')
     categoryItemGroup = i.groupby(['item_category', 'item_id', 'behavior_type'])
     categoryItemTotal = categoryItemGroup['time'].count().unstack('behavior_type')
@@ -233,9 +244,19 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
     categoryFeature['c_i_rate_2'] = categoryFeature['c_i_total_2'] / categoryFeature['c_total_2']
     categoryFeature['c_i_rate_3'] = categoryFeature['c_i_total_3'] / categoryFeature['c_total_3']
     categoryFeature['c_i_rate_4'] = categoryFeature['c_i_total_4'] / categoryFeature['c_total_4']
+    
+    categoryFeature['c_i_rate_1'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_2'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_3'] *= categoryFeature['c_total_4']
+    categoryFeature['c_i_rate_4'] *= categoryFeature['c_total_4']
+    
     categoryFeatureRate = categoryFeature.ix[ : , 'c_i_rate_1' : 'c_i_rate_4']
+    categoryFeatureRate.fillna(0, inplace = True)
     #category done
     ifeature = pd.merge(ifeature, categoryFeatureRate, 
+                        left_index = True, right_index = True, sort = False)
+                        
+    ifeature2 = pd.merge(ifeature2, categoryFeatureRate, 
                         left_index = True, right_index = True, sort = False)
     
 ## COMBINE
@@ -244,6 +265,7 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
     finalXy = pd.merge(finalXy, ufeature, how = 'left', 
                             left_index = True, right_index = True, sort = False)
     finalXy.fillna(0, inplace = True)
+    finalItemFeature = ifeature2
 ##LABEL & RANDOM
     #merge X and y
     if (not target):
@@ -253,6 +275,14 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
         finalXy = pd.merge(finalXy, labels, how = 'left', 
                                 left_index = True, right_index = True, sort = False)  
         finalXy.reset_index(inplace = True)
+        
+        labels = pd.read_csv(lfile, names = columns[0 : 2])
+        labels.drop('user_id', axis = 1, inplace = True)
+        labels.set_index('item_id', inplace = True)
+        labels['buy'] = 1
+        finalItemFeature = pd.merge(finalItemFeature, labels, how = 'left', 
+                            left_index = True, right_index = True, sort = False) 
+                            
         #random the zeros
         if (test == 0):
             ones = finalXy[finalXy['buy'] ==1]
@@ -261,9 +291,24 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
             zeros = zeros.ix[np.random.permutation(zeros.index)[ : zerosCount]]
             finalXy = pd.concat([ones, zeros])
             finalXy = finalXy.ix[np.random.permutation(finalXy.index)]
+            
+            ones = finalItemFeature[finalItemFeature['buy'] ==1]
+            zeros = finalItemFeature[finalItemFeature['buy'].isnull()]
+            zerosCount = (ratio - 1) * len(ones)
+            zeros = zeros.ix[np.random.permutation(zeros.index)[ : zerosCount]]
+            finalItemFeature = pd.concat([ones, zeros])
+            finalItemFeature = finalItemFeature.ix[np.random.permutation(finalItemFeature.index)]
+            
+            
         finalXy.ix[ :, -1].to_csv(labelDay, na_rep = '0', 
                                     index = False, header = False)
+        finalXy.ix[ :, : 2].to_csv(exampleDay, na_rep = '0', 
+                                    index = False, header = False)
         finalXy.drop(['user_id', 'item_id', 'buy'], axis = 1, inplace = True)
+        
+        finalItemFeature.ix[ :, -1].to_csv(itemLabel, na_rep = '0', 
+                                    index = True, header = True)
+        finalItemFeature.drop('buy', inplace = True, axis = 1)
     else:
         # save target example
         finalXy.reset_index(inplace = True)
@@ -274,6 +319,7 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
 #done, write into file
     finalXy.to_csv(featureDay, na_rep = '0', index = False, header = False)
     finalXy[ : 0].to_csv(featureName, na_rep = '0', index = False, header = True)
+    finalItemFeature.to_csv(itemFeature, na_rep = '0', index = True, header = True)
 ##pandas end
     
     endTime = datetime.now()
@@ -282,7 +328,7 @@ def extractFeature_Pandas(day, test = 0, target = 0, ratio = 32,
     print ('')
 
 def test():
-    extractFeature_Pandas('11_28')
+    extractFeature_Pandas('target', target = 1)
     input('>>')
 
 if __name__ == '__main__': test()
