@@ -1,0 +1,10 @@
+2014/
+package/
+material/
+*.pdf
+*.txt
+*.csv
+*.pyc
+*.chm
+*.plk
+*.npy

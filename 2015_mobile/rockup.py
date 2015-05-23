@@ -3,7 +3,7 @@ from fancymodel import *
 from extractFeature_Pandas import extractFeature_Pandas
 # from damnrule import ruleFile
 
-pwd = 'z:\\theblueisland\\'
+pwd = 'z:\\theblueisland\\2015_mobile\\'
 onlineset = pwd + 'onlineset\\'
 ruleScore = 1
 trainthreshold = 3
@@ -172,8 +172,8 @@ def test():
     # extractFeature_Pandas('12_8', test = 1)
     # extractFeature_Pandas('target', target = 1)
     train('11_18', 15)
-    localTest()
-    onlineSet()
+    # localTest()
+    # onlineSet()
     
 def main():
     updateFeature('11_18', 21)
