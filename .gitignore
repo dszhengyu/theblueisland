@@ -1,6 +1,7 @@
 2014/
 package/
 material/
+SPSS/
 *.pdf
 *.txt
 *.csv
@@ -9,3 +10,4 @@ material/
 *.plk
 *.npy
 *.txt
+iterate.dat
