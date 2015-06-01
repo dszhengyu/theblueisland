@@ -35,3 +35,18 @@ def get_user_balance_clean():
     user_balance_clean = user_balance_clean.ix[toKeep.index]
     user_balance_clean.reset_index(inplace = True)
     return user_balance_clean
+    
+def get_day_share_interest():
+    day_share_interest = pd.read_csv(day_share_interest_table, parse_dates = ['mfd_date'],
+                                        index_col = 'mfd_date')
+    return day_share_interest
+
+def get_mfd_bank_shibor():
+    mfd_bank_shibor = pd.read_csv(mfd_bank_shibor_table, parse_dates = ['mfd_date'])
+    mfd_bank_shibor.ix[295, 'mfd_date'] = datetime(2014, 8, 31)
+    mfd_bank_shibor.ix[294, 'mfd_date'] = datetime(2014, 8, 30)
+    mfd_bank_shibor.fillna(method = 'ffill', inplace = True)
+    mfd_bank_shibor.set_index('mfd_date', inplace = True)
+    mfd_bank_shibor = mfd_bank_shibor.resample('D', fill_method = 'bfill')
+    
+    return mfd_bank_shibor

@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
 import statsmodels as sm
 from statsmodels.tsa.arima_model import ARIMA, ARMA
-from statsmodels.tsa.stattools import acf, pacf
+
+from easyRude import AcfPacfPlot
 
 # purchase new commer
 def purchaseNewUserModel(purchaseSet, online = 0, debug = 0):
@@ -96,7 +97,8 @@ def newUserPredict(online = 0):
     purchaseRedeemVirginy = purchaseRedeemVirginy.sort_index()
     purchaseRedeemVirgin.set_index(['virginDayinMonth', 'virgin_date'], inplace = True)
     purchaseRedeemVirgin = purchaseRedeemVirgin.sort_index()
-
+    AcfPacfPlot(purchaseRedeemVirgin, 'purchaseRedeemVirgin')
+    
     purchaseNewPredict = 0
     redeemNewPredict = 0
     if (online == 0):
