@@ -9,12 +9,14 @@ import statsmodels as sm
 from statsmodels.tsa.arima_model import ARIMA, ARMA
 from statsmodels.tsa.stattools import acf, pacf
 
-from easyRude import purchaseRedeemPredict
+from easyRude import purchaseRedeemPredictEasy
+
+beginDate = '2013-07-01'
 
 ## submit online
-purchasePredict, redeemPredict = purchaseRedeemPredict(fromDate = '2014-09-01', 
-                                                        toDate = '2014-09-30', online = 1,
-                                                        beginDate = '2014-03-01')
+purchasePredict, redeemPredict = purchaseRedeemPredictEasy(fromDate = '2014-09-01', 
+                                                            toDate = '2014-09-30', 
+                                                            beginDate = beginDate)
                                                         
 online = pd.concat([purchasePredict, redeemPredict], axis = 1)
-online.to_csv(pwd + 'tc_comp_predict_table.csv', header = None, date_format = "%Y%m%d")
+online.to_csv('z:\\theblueisland\\tc_comp_predict_table.csv', header = None, date_format = "%Y%m%d")

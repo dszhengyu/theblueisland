@@ -10,4 +10,5 @@ SPSS/
 *.plk
 *.npy
 *.txt
+*.whl
 iterate.dat

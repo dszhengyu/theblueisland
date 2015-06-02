@@ -41,7 +41,7 @@ split_time = datetime(2014, 8, 1)
 
 Interest_O_N_X = Interest_O_N[start_time : (split_time - Day())]
 Interest_O_N_y = Interest_O_N[split_time : ]
-Interest_O_N_model = ARIMA(Interest_O_N_X, [8, 1, 8]).fit(trend='nc')
+Interest_O_N_model = ARIMA(Interest_O_N_X, [8, 1, 8]).fit(trend = 'nc')
 Interest_O_N_predict = Interest_O_N_model.predict('2014-08-01', '2014-08-31', typ = 'levels')
 Interest_O_N_predict.plot()
 
