@@ -10,6 +10,7 @@ import statsmodels as sm
 from statsmodels.tsa.arima_model import ARIMA, ARMA
 from statsmodels.tsa.stattools import acf, pacf, arma_order_select_ic
 
+from dataFactory import get_user_balance, get_user_balance_clean
 import rWrapper
 r_ARIMA_predict = rWrapper.r_ARIMA_predict
 from importlib import reload
@@ -17,7 +18,7 @@ reload(rWrapper)
 
 fromDate = '2014-08-01'
 toDate = '2014-08-31'
-beginDate = '2013-07-01'
+beginDate = '2013-09-01'
 online = 0
 debug = 0
 
@@ -35,8 +36,6 @@ def AcfPacfPlot(set, title):
    
 def analyseARIMA():
     beginDate = '2014-02-01'
-    from dataFactory import get_user_balance, get_user_balance_clean
-    pwd = 'z:\\theblueisland\\'
     user_balance = get_user_balance()
     user_balance = user_balance[user_balance['report_date'] >= beginDate]
     user_balance_clean = get_user_balance_clean()
@@ -66,11 +65,10 @@ def analyseARIMA():
 
                           
 def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
-                          beginDate = '2013-07-01', online = 0, debug = 0):
+                          beginDate = '2013-07-01', online = 0, debug = 0, 
+                          order = ([8, 1, 8], [8, 1, 8])):
                               
     ## get data
-    from dataFactory import get_user_balance, get_user_balance_clean
-    pwd = 'z:\\theblueisland\\'
     user_balance = get_user_balance()
     user_balance = user_balance[user_balance['report_date'] >= beginDate]
     user_balance_clean = get_user_balance_clean()
@@ -100,17 +98,25 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     # purchaseDelta1 = delta1(purchase)
     # purchaseDelta1.plot(title = beginDate + ' purchaseDelta1')
     # AcfPacfPlot(purchaseDelta1, 'purchaseDelta1')
-    # purchaseDelta1_predict = r_ARIMA_predict
-    # purchaseDelta1_predict.plot()
+    # # purchaseDelta1_predict = r_ARIMA_predict
+    # # purchaseDelta1_predict.plot()
+    # 
+    # purchaseDelta2 = delta1(purchaseDelta1)
+    # purchaseDelta2.plot(title = beginDate + ' purchaseDelta2')
+    # AcfPacfPlot(purchaseDelta2, 'purchaseDelta2')
+    # 
+    # purchaseDelta3 = delta1(purchaseDelta2)
+    # purchaseDelta3.plot(title = beginDate + ' purchaseDelta3')
+    # AcfPacfPlot(purchaseDelta3, 'purchaseDelta3')
     
     if (online == 0):
         purchaseX = XPurchaseRedeemTotal['total_purchase_amt']
     else:
         purchaseX = purchaseRedeemTotal['total_purchase_amt']
         
-    purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, [8, 1, 8], fromDate, toDate)
-    purchaseYPredict.plot(title = beginDate + ' purchase', label = 'purchasePredictNoNew', 
-                            legend = True)
+    purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, order[0], fromDate, toDate)
+    #purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, [12, 2, 12], fromDate, toDate)
+    purchaseYPredict.plot(title = beginDate + ' purchase', label = 'purchasePredictNoNew', legend = True)
     print ('$$$$$$$$$$purchaseModelResid normal test: ', normaltest(purchaseModelResid))
     #purchaseModelResid.plot(title = 'purchaseModelResid')
     
@@ -128,9 +134,9 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     # # analyse bellow
     # AcfPacfPlot(redeem, 'redeem')
     # 
-    # redeemLog = np.log(redeem)
-    # redeemLog.plot(title = beginDate + ' redeem')
-    # AcfPacfPlot(redeemLog, 'redeemLog')
+    # # redeemLog = np.log(redeem)
+    # # redeemLog.plot(title = beginDate + ' redeem')
+    # # AcfPacfPlot(redeemLog, 'redeemLog')
     # 
     # redeemDelta1 = delta1(redeem)
     # redeemDelta1.plot(title = beginDate + ' redeemDelta1')
@@ -141,8 +147,8 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     # redeemDelta2 = delta1(redeemDelta1)
     # redeemDelta2.plot(title = beginDate + ' redeemDelta1')
     # AcfPacfPlot(redeemDelta2, 'redeemDelta2')
-    #redeemDelta2_predict = r_ARIMA_predict
-    #redeemDelta2_predict.plot()
+    # redeemDelta2_predict = r_ARIMA_predict
+    # redeemDelta2_predict.plot()
 
     if (online == 0):
         redeemX = XPurchaseRedeemTotal['total_redeem_amt']
@@ -151,11 +157,11 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
 
     # log transformation
     # redeemX = np.log(redeemX)
-    redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, [12, 1, 12], fromDate, toDate)
+    redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, order[1], fromDate, toDate)
+    #redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, [15, 1, 15], fromDate, toDate)
     # log back transformation
     #redeemYPredict = np.exp(redeemYPredict)
-    redeemYPredict.plot(title = beginDate + ' redeem', label = 'redeemPredictNoNew', 
-                        legend = True)
+    redeemYPredict.plot(title = beginDate + ' redeem', label = 'redeemPredictNoNew', legend = True)
     #redeemModelResid.plot(title = 'redeemModelResid')
     print ('$$$$$$$$$$redeemModelResid normal test: ', normaltest(redeemModelResid))
     
@@ -169,20 +175,51 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     
     return (purchaseYPredict, redeemYPredict, purchaseErrorVar, redeemErrorVar)
     
-def purchaseRedeemPredictOnlineEasy(fromDate = '2014-08-01', 
-                                    toDate = '2014-08-31', 
-                                    beginDate = '2013-07-01'):
+def purchaseRedeemPredictOnlineEasy(beginDate, order, 
+                                    fromDate = '2014-09-01', 
+                                    toDate = '2014-09-30'):
     purchasePredict, redeemPredict,  purchaseErrorVar, redeemErrorVar = purchaseRedeemPredict(fromDate, toDate, 
                                                              beginDate, online = 1, 
-                                                             debug = 0)
+                                                             debug = 0, order = order)
     return (purchasePredict, redeemPredict)
 
-def purchaseRedeemPredictErrorVar(fromDate = '2014-08-01', 
-                                    toDate = '2014-08-31', 
-                                    beginDate = '2013-07-01'):
+def purchaseRedeemPredictLocalAndErrorVar(beginDate, order, 
+                                    fromDate = '2014-08-01', 
+                                    toDate = '2014-08-31'):
     purchasePredict, redeemPredict, purchaseErrorVar, redeemErrorVar = purchaseRedeemPredict(fromDate, toDate, 
                                                              beginDate, online = 0, 
-                                                             debug = 0)
+                                                             debug = 0, order = order)
+    return ((purchasePredict, redeemPredict), (purchaseErrorVar, redeemErrorVar))
+    
+def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
+    user_balance_clean = get_user_balance_clean()
+    timeGroup = user_balance_clean.groupby(['report_date'])
+    purchaseRedeemTotal = timeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    split_time = datetime.strptime('20140801', "%Y%m%d")
+    user_balance_y = user_balance_clean[user_balance_clean['report_date'] >= split_time]
+    yTimeGroup = user_balance_y.groupby(['report_date'])
+    yPurchaseRedeemTotal = yTimeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    
+    purchase = purchaseRedeemTotal['total_purchase_amt']
+    purchase.plot(title = 'multiModel-purchase')
+    purchaseYPredict = purchaseRedeemPredict['purchasePredict']
+    purchaseYPredict.plot(title = 'multiModel-purchase', label = 'purchasePredict', legend = True)
+    purchaseYActual = yPurchaseRedeemTotal['total_purchase_amt']
+    print ('modelTime = ', modelTime)
+    print ("@@@@@@@@@@purchaseNoNew mean_squared_error = ", 
+            mean_squared_error(purchaseYActual, purchaseYPredict))
+    purchaseErrorVar = (np.abs(purchaseYActual - purchaseYPredict) / purchaseYActual).var()
+    
+    redeem = purchaseRedeemTotal['total_redeem_amt']
+    redeem.plot(title = 'multiModel-redeem')
+    redeemYPredict = purchaseRedeemPredict['redeemPredict']
+    redeemYPredict.plot(title = 'multiModel-redeem', label = 'redeemPredict', legend = True)
+    redeemYActual = yPurchaseRedeemTotal['total_redeem_amt']
+    print ('modelTime = ', modelTime)
+    print ("@@@@@@@@@@redeemNoNew mean_squared_error = ", 
+            mean_squared_error(redeemYActual, redeemYPredict))
+    redeemErrorVar = (np.abs(redeemYActual - redeemYPredict) / redeemYPredict).var()
+    
     return (purchaseErrorVar, redeemErrorVar)
     
 

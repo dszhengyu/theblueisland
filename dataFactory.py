@@ -18,22 +18,26 @@ mfd_bank_shibor_table = raw_data + 'mfd_bank_shibor.csv'
 # user_balance.fillna(0, inplace = True)
 # user_balance.to_csv(user_balance_table_parsed_date, index = None)
 
+
+## global data member
+user_balance = pd.read_csv(user_balance_table_parsed_date, parse_dates = ['report_date'])
+# clean data here
+userGroup = user_balance.groupby('user_id')
+pLess10 = userGroup['total_purchase_amt'].max() < 10
+rLess10 = userGroup['total_redeem_amt'].max() < 10
+less10 = np.logical_and(pLess10, rLess10)
+toKeep = less10[less10 == False]
+user_balance_clean = user_balance.set_index('user_id')
+user_balance_clean = user_balance_clean.ix[toKeep.index]
+user_balance_clean.reset_index(inplace = True)
+
 ## generate data
 def get_user_balance():
-    user_balance = pd.read_csv(user_balance_table_parsed_date, parse_dates = ['report_date'])
+    global user_balance
     return user_balance
     
 def get_user_balance_clean():
-    # clean data here
-    user_balance = get_user_balance()
-    userGroup = user_balance.groupby('user_id')
-    pLess10 = userGroup['total_purchase_amt'].max() < 10
-    rLess10 = userGroup['total_redeem_amt'].max() < 10
-    less10 = np.logical_and(pLess10, rLess10)
-    toKeep = less10[less10 == False]
-    user_balance_clean = user_balance.set_index('user_id')
-    user_balance_clean = user_balance_clean.ix[toKeep.index]
-    user_balance_clean.reset_index(inplace = True)
+    global user_balance_clean
     return user_balance_clean
     
 def get_day_share_interest():
@@ -48,5 +52,15 @@ def get_mfd_bank_shibor():
     mfd_bank_shibor.fillna(method = 'ffill', inplace = True)
     mfd_bank_shibor.set_index('mfd_date', inplace = True)
     mfd_bank_shibor = mfd_bank_shibor.resample('D', fill_method = 'bfill')
-    
     return mfd_bank_shibor
+ 
+# example to support global datamember
+# x = 0
+# def get_x():
+#     global x
+#     print (x)
+#     if (x == 0):
+#         x = 1
+#     print (x)
+# 
+# get_x()
