@@ -1,13 +1,19 @@
-#orderUsed = c(8, 1, 8)
-#predictDays = 30
+# orderUsed = c(8, 1, 8)
+# predictDays = 31
+# auto = 0
 
-library('stats')
-train <- read.csv('z:\\theblueisland\\R\\trainFile.csv', header = FALSE)
-model <-arima(train, order = orderUsed)
-pre = predict(model, predictDays)
-write.csv(pre[["pred"]], 'z:\\theblueisland\\R\\predictFile.csv', row.names = FALSE)
-write.csv(residuals(model), 'z:\\theblueisland\\R\\residualsFile.csv', row.names = FALSE)
+train <- read.csv('z:\\theblueisland\\R\\trainFileARIMA.csv', header = FALSE)
+if (auto == 0) {
+  library('stats')
+  fit <-arima(train, order = orderUsed)
+  pre <- predict(fit, predictDays)
+  predict <- pre[["pred"]]
+} else {
+  library('forecast')
+  fit <-auto.arima(train, start.p = 5, start.q = 5)
+  pre <- forecast(fit, h = predictDays)
+  predict <- pre$mean
+}
 
-
-#model2 = Arima(train, order = c(8, 1, 8))
-#pre2 = forecast(model2, h = 30)
+write.csv(predict, 'z:\\theblueisland\\R\\predictFileARIMA.csv', row.names = FALSE)
+write.csv(residuals(fit), 'z:\\theblueisland\\R\\residualsFileARIMA.csv', row.names = FALSE)

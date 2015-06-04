@@ -1,3 +1,6 @@
+# 好像不会是重点, 因为越到后面增幅约小影响越小
+# 代码很乱, 主要是因为之前用statsmodels结果有一些地方很奇怪==
+# 先放着吧
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -9,6 +12,8 @@ import statsmodels as sm
 from statsmodels.tsa.arima_model import ARIMA, ARMA
 
 from easyRude import AcfPacfPlot
+from dataFactory import get_user_balance, get_user_balance_clean
+from rWrapper import r_ARIMA_predict
 
 # purchase new commer
 def purchaseNewUserModel(purchaseSet, online = 0, debug = 0):
@@ -22,7 +27,7 @@ def purchaseNewUserModel(purchaseSet, online = 0, debug = 0):
         if (i != 1):
             purchaseVirginX = purchaseVirginX.resample('M', fill_method = 'ffill', label = 'left', 
                                                         loffset = '1d')
-        purchaseVirginYPredict = ARIMA(purchaseVirginX, [2, 1, 0]).fit().predict('2014-08-1', '2014-08-2', dynamic=True)
+        purchaseVirginYPredict, _ = r_ARIMA_predict(purchaseVirginX, '2014-08-1', '2014-08-1', auto = 1)
         purchaseVirginYPredict.index = purchaseVirginYPredict.index + (i - 1) * Day()
         if (debug == 1):
             purchaseVirginYPredict.plot(label = 'predict', legend = True, style = 'o')
@@ -56,7 +61,7 @@ def redeemNewUserModel(redeemSet, online = 0, debug = 0):
         if (i != 1):
             redeemVirginX =redeemVirginX.resample('M', fill_method = 'ffill', label = 'left', 
                                                         loffset = '1d')
-        redeemVirginYPredict = ARIMA(redeemVirginX, [2, 1, 0]).fit().predict('2014-08-1', '2014-08-2', dynamic=True)
+        redeemVirginYPredict, _ = r_ARIMA_predict(redeemVirginX, '2014-08-1', '2014-08-1', auto = 1)
         redeemVirginYPredict.index = redeemVirginYPredict.index + (i - 1) * Day()
         result[i] = redeemVirginYPredict
         if (debug == 1):
@@ -67,12 +72,10 @@ def redeemNewUserModel(redeemSet, online = 0, debug = 0):
         result.index = pd.date_range('2014-09-01', '2014-09-30')
     return result
     
-def newUserPredict(online = 0):
-    from dataFactory import get_user_balance, get_user_balance_clean
-    pwd = 'z:\\theblueisland\\'
+def newUserPredict(fromDate = '2014-01-01', online = 0):
     user_balance = get_user_balance()
-    user_balance_clean = get_user_balance_clean()
-
+    #user_balance_clean = get_user_balance_clean()
+    user_balance = user_balance[user_balance['report_date'] >= fromDate]
     userGroup = user_balance.groupby('user_id')
     userVirginDay = DataFrame(userGroup['report_date'].min())
     userVirginDay.columns = ['virgin_date']
@@ -97,7 +100,7 @@ def newUserPredict(online = 0):
     purchaseRedeemVirginy = purchaseRedeemVirginy.sort_index()
     purchaseRedeemVirgin.set_index(['virginDayinMonth', 'virgin_date'], inplace = True)
     purchaseRedeemVirgin = purchaseRedeemVirgin.sort_index()
-    AcfPacfPlot(purchaseRedeemVirgin, 'purchaseRedeemVirgin')
+    # AcfPacfPlot(purchaseRedeemVirgin, 'purchaseRedeemVirgin')
     
     purchaseNewPredict = 0
     redeemNewPredict = 0

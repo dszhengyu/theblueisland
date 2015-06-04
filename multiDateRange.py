@@ -5,12 +5,14 @@ from pandas import DataFrame
 from easyRude import purchaseRedeemPredictLocalAndErrorVar, purchaseRedeemModelEvaluate, purchaseRedeemPredictOnlineEasy
 pwd = 'z:\\theblueisland\\'
 arimaWeightFile = pwd + 'arimaWeightFile.csv'
-modelTime = ['2013-07-01', '2013-09-01', '2013-11-01', '2014-03-01', '2014-05-01']
-modelOrder = {'2013-07-01' : ([8, 1, 8], [12, 1, 12]),
-                '2013-09-01' : ([12, 1, 12], [15, 1, 15]),
-                '2013-11-01' : ([8, 1, 8], [14, 1, 14]),
+modelTime = ['2013-11-01', '2014-03-01', '2014-04-01', '2014-05-01']
+modelOrder = {'2013-11-01' : ([8, 1, 8], [14, 1, 14]),
                 '2014-03-01' : ([12, 1, 12], [6, 1, 7]),
-                '2014-05-01' : ([12, 2, 12], [10, 2, 14])}
+                '2014-04-01' : ([13, 1, 14], [13, 1, 14]),
+                '2014-05-01' : ([12, 2, 12], [14, 1, 15])}
+# '2013-07-01' : ([8, 1, 8], [12, 1, 12]),
+# '2013-09-01' : ([12, 1, 12], [15, 1, 15])
+
 def updateAndEvaluateArimaWeight():
     weight = DataFrame(index = modelTime, columns = ['purchaseWeight', 'redeemWeight'])
     testData = [1, 2]

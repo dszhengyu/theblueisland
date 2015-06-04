@@ -18,7 +18,7 @@ reload(rWrapper)
 
 fromDate = '2014-08-01'
 toDate = '2014-08-31'
-beginDate = '2013-09-01'
+beginDate = '2014-04-01'
 online = 0
 debug = 0
 
@@ -98,13 +98,13 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     # purchaseDelta1 = delta1(purchase)
     # purchaseDelta1.plot(title = beginDate + ' purchaseDelta1')
     # AcfPacfPlot(purchaseDelta1, 'purchaseDelta1')
-    # # purchaseDelta1_predict = r_ARIMA_predict
-    # # purchaseDelta1_predict.plot()
-    # 
+    # purchaseDelta1_predict = r_ARIMA_predict
+    # purchaseDelta1_predict.plot()
+    
     # purchaseDelta2 = delta1(purchaseDelta1)
     # purchaseDelta2.plot(title = beginDate + ' purchaseDelta2')
     # AcfPacfPlot(purchaseDelta2, 'purchaseDelta2')
-    # 
+    
     # purchaseDelta3 = delta1(purchaseDelta2)
     # purchaseDelta3.plot(title = beginDate + ' purchaseDelta3')
     # AcfPacfPlot(purchaseDelta3, 'purchaseDelta3')
@@ -114,8 +114,11 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     else:
         purchaseX = purchaseRedeemTotal['total_purchase_amt']
         
-    purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, order[0], fromDate, toDate)
-    #purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, [12, 2, 12], fromDate, toDate)
+ 
+    purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, fromDate, toDate, 
+                                                        order = order[0], auto = 0)
+    # purchaseYPredict, purchaseModelResid = r_ARIMA_predict(purchaseX, fromDate, toDate,  
+    # order = [13, 1, 14], auto = 0)
     purchaseYPredict.plot(title = beginDate + ' purchase', label = 'purchasePredictNoNew', legend = True)
     print ('$$$$$$$$$$purchaseModelResid normal test: ', normaltest(purchaseModelResid))
     #purchaseModelResid.plot(title = 'purchaseModelResid')
@@ -133,16 +136,16 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     redeem.plot(title = beginDate + ' redeem')
     # # analyse bellow
     # AcfPacfPlot(redeem, 'redeem')
-    # 
-    # # redeemLog = np.log(redeem)
-    # # redeemLog.plot(title = beginDate + ' redeem')
-    # # AcfPacfPlot(redeemLog, 'redeemLog')
-    # 
+    
+    # redeemLog = np.log(redeem)
+    # redeemLog.plot(title = beginDate + ' redeem')
+    # AcfPacfPlot(redeemLog, 'redeemLog')
+    
     # redeemDelta1 = delta1(redeem)
     # redeemDelta1.plot(title = beginDate + ' redeemDelta1')
     # AcfPacfPlot(redeemDelta1, 'redeemDelta1')
-    # #redeemDelta1_predict = r_ARIMA_predict
-    # #redeemDelta1_predict.plot()
+    #redeemDelta1_predict = r_ARIMA_predict
+    #redeemDelta1_predict.plot()
     # 
     # redeemDelta2 = delta1(redeemDelta1)
     # redeemDelta2.plot(title = beginDate + ' redeemDelta1')
@@ -156,9 +159,11 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
         redeemX = purchaseRedeemTotal['total_redeem_amt']        
 
     # log transformation
-    # redeemX = np.log(redeemX)
-    redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, order[1], fromDate, toDate)
-    #redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, [15, 1, 15], fromDate, toDate)
+    # redeemX = np.log(redeemX) 
+    redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, fromDate, toDate, 
+                                                        order = order[1], auto = 0)
+    # redeemYPredict, redeemModelResid = r_ARIMA_predict(redeemX, fromDate, toDate, 
+    # order = [13, 1, 14], auto = 0)
     # log back transformation
     #redeemYPredict = np.exp(redeemYPredict)
     redeemYPredict.plot(title = beginDate + ' redeem', label = 'redeemPredictNoNew', legend = True)
@@ -223,4 +228,4 @@ def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
     return (purchaseErrorVar, redeemErrorVar)
     
 
-if __name__ == '__main__': purchaseRedeemPredict('2014-08-01', '2014-08-31')
+#if __name__ == '__main__': purchaseRedeemPredict('2014-08-01', '2014-08-31')
