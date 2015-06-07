@@ -10,7 +10,7 @@ from statsmodels.tsa.arima_model import ARIMA, ARMA
 from statsmodels.tsa.stattools import acf, pacf
 
 from easyRude import purchaseRedeemPredictOnlineEasy
-from multiDateRange import arimaMultiModelOnline
+from multiDateRange import arimaMultiModelOnline, assembleARIMAandGARCHOnline
 
 
 
@@ -22,6 +22,6 @@ from multiDateRange import arimaMultiModelOnline
 #                                                         
 # online = pd.concat([purchasePredict, redeemPredict], axis = 1)
 
-online = arimaMultiModelOnline()
+online = assembleARIMAandGARCHOnline()
 
 online.to_csv('z:\\theblueisland\\tc_comp_predict_table.csv', header = None, date_format = "%Y%m%d")

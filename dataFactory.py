@@ -9,6 +9,7 @@ pwd = 'z:\\theblueisland\\'
 raw_data = pwd + 'raw_data\\'
 user_balance_table = raw_data + 'user_balance_table.csv'
 user_balance_table_parsed_date = raw_data + 'user_balance_table_parsed_date.csv'
+user_balance_table_clean = raw_data + 'user_balance_table_clean.csv'
 user_profile_table = raw_data + 'user_profile_table.csv'
 day_share_interest_table = raw_data + 'mfd_day_share_interest.csv'
 mfd_bank_shibor_table = raw_data + 'mfd_bank_shibor.csv'
@@ -30,6 +31,7 @@ toKeep = less10[less10 == False]
 user_balance_clean = user_balance.set_index('user_id')
 user_balance_clean = user_balance_clean.ix[toKeep.index]
 user_balance_clean.reset_index(inplace = True)
+user_balance_clean.to_csv(user_balance_table_clean)
 
 ## generate data
 def get_user_balance():

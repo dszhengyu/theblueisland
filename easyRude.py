@@ -13,12 +13,13 @@ from statsmodels.tsa.stattools import acf, pacf, arma_order_select_ic
 from dataFactory import get_user_balance, get_user_balance_clean
 import rWrapper
 r_ARIMA_predict = rWrapper.r_ARIMA_predict
+r_GARCH_predict = rWrapper.r_GARCH_predict
 from importlib import reload
 reload(rWrapper)
 
 fromDate = '2014-08-01'
 toDate = '2014-08-31'
-beginDate = '2014-04-01'
+beginDate = '2013-07-01'
 online = 0
 debug = 0
 
@@ -63,11 +64,7 @@ def analyseARIMA():
     rDelta1.plot()
     AcfPacfPlot(rDelta1, 'redeemDelta1')
 
-                          
-def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
-                          beginDate = '2013-07-01', online = 0, debug = 0, 
-                          order = ([8, 1, 8], [8, 1, 8])):
-                              
+def purchaseRedeemTotalFactory(beginDate = '2013-07-01'):
     ## get data
     user_balance = get_user_balance()
     user_balance = user_balance[user_balance['report_date'] >= beginDate]
@@ -88,6 +85,18 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     user_balance_y = user_balance_clean[user_balance_clean['report_date'] >= split_time]
     yTimeGroup = user_balance_y.groupby(['report_date'])
     yPurchaseRedeemTotal = yTimeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    
+    return (purchaseRedeemTotal, XPurchaseRedeemTotal, yPurchaseRedeemTotal)
+                          
+def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
+                          beginDate = '2013-07-01', online = 0, debug = 0, 
+                          order = ([8, 1, 8], [8, 1, 8])):
+                              
+    # get purchaseRedeemTotalResult
+    purchaseRedeemTotalResult = purchaseRedeemTotalFactory(beginDate = beginDate)
+    purchaseRedeemTotal = purchaseRedeemTotalResult[0]
+    XPurchaseRedeemTotal = purchaseRedeemTotalResult[1] 
+    yPurchaseRedeemTotal = purchaseRedeemTotalResult[2] 
     
     ## purchase
     plt.figure()
@@ -180,6 +189,69 @@ def purchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
     
     return (purchaseYPredict, redeemYPredict, purchaseErrorVar, redeemErrorVar)
     
+    # beginDate = '2014-04-01'
+def garchPurchaseRedeemPredict(fromDate = '2014-08-01', toDate = '2014-08-31',
+                          beginDate = '2013-07-01', online = 0, debug = 0, 
+                          order = ([20, 3], [20, 3])):
+                              
+    # get purchaseRedeemTotalResult
+    purchaseRedeemTotalResult = purchaseRedeemTotalFactory(beginDate = beginDate)
+    purchaseRedeemTotal = purchaseRedeemTotalResult[0]
+    XPurchaseRedeemTotal = purchaseRedeemTotalResult[1] 
+    yPurchaseRedeemTotal = purchaseRedeemTotalResult[2] 
+    
+    ## purchase
+    plt.figure()
+    purchase = purchaseRedeemTotal['total_purchase_amt']
+    purchase.plot(title = beginDate + ' purchase')
+    # # analyse bellow
+    # AcfPacfPlot(purchase, 'purchase')
+    
+    if (online == 0):
+        purchaseX = XPurchaseRedeemTotal['total_purchase_amt']
+    else:
+        purchaseX = purchaseRedeemTotal['total_purchase_amt']
+        
+    purchaseYPredict, purchaseModelResid = r_GARCH_predict(purchaseX, fromDate, toDate, order = order[0])
+    # purchaseYPredict, purchaseModelResid = r_GARCH_predict(purchaseX, fromDate, toDate, order = [7, 11])
+    purchaseYPredict.plot(title = beginDate + ' purchase', label = 'purchasePredictNoNew', legend = True)
+    print ('$$$$$$$$$$purchaseModelResid normal test: ', normaltest(purchaseModelResid))
+    
+    purchaseErrorVar = 0
+    if (online == 0):
+        purchaseYActual = yPurchaseRedeemTotal['total_purchase_amt']
+        print ('beginDate = ', beginDate)
+        print ("@@@@@@@@@@purchaseNoNew mean_squared_error = ", 
+                mean_squared_error(purchaseYActual, purchaseYPredict))
+        purchaseErrorVar = (np.abs(purchaseYActual - purchaseYPredict) / purchaseYActual).var()
+    
+    ## redeem
+    redeem = purchaseRedeemTotal['total_redeem_amt']
+    redeem.plot(title = beginDate + ' redeem')
+    # # analyse bellow
+    # AcfPacfPlot(redeem, 'redeem')
+
+    if (online == 0):
+        redeemX = XPurchaseRedeemTotal['total_redeem_amt']
+    else:
+        redeemX = purchaseRedeemTotal['total_redeem_amt']        
+
+    redeemYPredict, redeemModelResid = r_GARCH_predict(redeemX, fromDate, toDate, order = order[1])
+    #redeemYPredict, redeemModelResid = r_GARCH_predict(redeemX, fromDate, toDate, order = [8, 10])
+    redeemYPredict.plot(title = beginDate + ' redeem', label = 'redeemPredictNoNew', legend = True)
+    print ('$$$$$$$$$$redeemModelResid normal test: ', normaltest(redeemModelResid))
+    
+    redeemErrorVar = 0
+    if (online == 0):
+        redeemYActual = yPurchaseRedeemTotal['total_redeem_amt']
+        print ('beginDate = ', beginDate)
+        print ("@@@@@@@@@@redeemNoNew mean_squared_error = ", 
+                mean_squared_error(redeemYActual, redeemYPredict))
+        redeemErrorVar = (np.abs(redeemYActual - redeemYPredict) / redeemYPredict).var()
+    
+    return (purchaseYPredict, redeemYPredict, purchaseErrorVar, redeemErrorVar)
+    
+
 def purchaseRedeemPredictOnlineEasy(beginDate, order, 
                                     fromDate = '2014-09-01', 
                                     toDate = '2014-09-30'):
@@ -188,6 +260,14 @@ def purchaseRedeemPredictOnlineEasy(beginDate, order,
                                                              debug = 0, order = order)
     return (purchasePredict, redeemPredict)
 
+def purchaseRedeemPredictOnlineEasyGarch(beginDate, order, 
+                                    fromDate = '2014-09-01', 
+                                    toDate = '2014-09-30'):
+    purchasePredict, redeemPredict,  purchaseErrorVar, redeemErrorVar = garchPurchaseRedeemPredict(fromDate, toDate, 
+                                                             beginDate, online = 1, 
+                                                             debug = 0, order = order)
+    return (purchasePredict, redeemPredict)
+    
 def purchaseRedeemPredictLocalAndErrorVar(beginDate, order, 
                                     fromDate = '2014-08-01', 
                                     toDate = '2014-08-31'):
@@ -195,6 +275,15 @@ def purchaseRedeemPredictLocalAndErrorVar(beginDate, order,
                                                              beginDate, online = 0, 
                                                              debug = 0, order = order)
     return ((purchasePredict, redeemPredict), (purchaseErrorVar, redeemErrorVar))
+
+def purchaseRedeemPredictLocalAndErrorVarGarch(beginDate, order, 
+                                    fromDate = '2014-08-01', 
+                                    toDate = '2014-08-31'):
+    purchasePredict, redeemPredict, purchaseErrorVar, redeemErrorVar = garchPurchaseRedeemPredict(fromDate, toDate, 
+                                                             beginDate, online = 0, 
+                                                             debug = 0, order = order)
+    return ((purchasePredict, redeemPredict), (purchaseErrorVar, redeemErrorVar))
+    
     
 def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
     user_balance_clean = get_user_balance_clean()
