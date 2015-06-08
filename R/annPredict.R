@@ -3,28 +3,31 @@
 # online = 0
 
 # global 
-InputTimeLength = 30
+InputTimeLength = 6
 OutputTimeLength = 1
 
 library('nnet')
 library(plyr)
+library('AMORE')
 #user_balance <- read.csv('z:\\theblueisland\\raw_data\\user_balance_table_parsed_date.csv')
 user_balance_clean <- read.csv('z:\\theblueisland\\raw_data\\user_balance_table_clean.csv')
 purchaseRedeemTotal <- ddply(user_balance_clean, c("report_date"), function(df)c(sum(df$total_purchase_amt), sum(df$total_redeem_amt)))
 purchaseTotal <- purchaseRedeemTotal$V1
 redeemTotal <- purchaseRedeemTotal$V2
 
-############################### practice####################################################
-# timeVector <- purchaseTotal
-# XLength <- 15
+# ############################### practice####################################################
+# purchaseRedeemTotalTrain <- purchaseRedeemTotal[244 : 396, ]
+# purchaseTotalTrain <- purchaseRedeemTotalTrain$V1
+# timeVector <- purchaseTotalTrain
+# XLength <- 30
 # yLength <- 1
 # 
 # rowCount <- length(timeVector) - (XLength + yLength - 1)
 # XIndex <- vector(length = rowCount * XLength)
 # yIndex <- vector(length = rowCount * yLength)
 # 
-# XIndexSingle <- c(1 : 15)
-# yIndexSingle <- 16
+# XIndexSingle <- c(1 : XLength)
+# yIndexSingle <- c((XLength + 1) : (XLength + yLength))
 # for (i in 1 : rowCount) {
 #   print (i)
 #   from <- XLength * (i - 1) + 1
@@ -37,9 +40,9 @@ redeemTotal <- purchaseRedeemTotal$V2
 #   yIndexSingle <- yIndexSingle + 1
 # }
 # 
-# X <- data.frame(matrix(purchaseTotal[XIndex], nrow <- rowCount,  nclos <- XLength, byrow <- TRUE))
-# y <- data.frame(matrix(purchaseTotal[yIndex], nrows <- rowCount, nclos <- yLength, byrow <- TRUE))
-# XTest <- data.frame(matrix(purchaseTotal[XIndexSingle], nrow <- 1,  nclos <- XLength, byrow <- TRUE))
+# X <- data.frame(matrix(timeVector[XIndex], nrow <- rowCount,  nclos <- XLength, byrow <- TRUE))
+# y <- data.frame(matrix(timeVector[yIndex], nrows <- rowCount, nclos <- yLength, byrow <- TRUE))
+# XTest <- data.frame(matrix(timeVector[XIndexSingle], nrow <- 1,  nclos <- XLength, byrow <- TRUE))
 ###############################################practice end######################################
 
 generateXy <- function(timeVector, XLength, yLength){
@@ -47,8 +50,8 @@ generateXy <- function(timeVector, XLength, yLength){
   XIndex <- vector(length = rowCount * XLength)
   yIndex <- vector(length = rowCount * yLength)
   
-  XIndexSingle <- c(1 : 15)
-  yIndexSingle <- 16
+  XIndexSingle <- c(1 : XLength)
+  yIndexSingle <- c((XLength + 1) : (XLength + yLength))
   for (i in 1 : rowCount) {
     from <- XLength * (i - 1) + 1
     to <- XLength * i
@@ -60,9 +63,9 @@ generateXy <- function(timeVector, XLength, yLength){
     yIndexSingle <- yIndexSingle + 1
   }
   
-  X <- data.frame(matrix(purchaseTotal[XIndex], nrow <- rowCount,  nclos <- XLength, byrow <- TRUE))
-  y <- data.frame(matrix(purchaseTotal[yIndex], nrows <- rowCount, nclos <- yLength, byrow <- TRUE))
-  XTest <- data.frame(matrix(purchaseTotal[XIndexSingle], nrow <- 1,  nclos <- XLength, byrow <- TRUE))
+  X <- data.frame(matrix(timeVector[XIndex], nrow <- rowCount,  nclos <- XLength, byrow <- TRUE))
+  y <- data.frame(matrix(timeVector[yIndex], nrows <- rowCount, nclos <- yLength, byrow <- TRUE))
+  XTest <- data.frame(matrix(timeVector[XIndexSingle], nrow <- 1,  nclos <- XLength, byrow <- TRUE))
   
   result <-list(X = X, y = y, XTest = XTest)
   return(result)
@@ -84,7 +87,7 @@ unscale01 <- function(X, max, min) {
 if (online == 0) {
   
   # split train and test, split day is 20140801
-  purchaseRedeemTotalTrain <- purchaseRedeemTotal[1 : 396, ]
+  purchaseRedeemTotalTrain <- purchaseRedeemTotal[244 : 396, ]
   purchaseRedeemTotalTest <- purchaseRedeemTotal[397 : 427, ]
   
   ### purchase
@@ -108,12 +111,28 @@ if (online == 0) {
   yScaling <- sapply(y, scale01, yMAX, yMIN)
   
   # set ANN model and train
-  purchaseModel <- nnet(XScaling, yScaling, size = 14, linout = TRUE)
+  purchaseModel <- nnet(XScaling, yScaling, size = 8, linout = TRUE)
+  
+#   purchasNet <- newff(n.neurons=c(InputTimeLength, 30, 15, OutputTimeLength), learning.rate.global=1e-3, 
+#                momentum.global=0.01, error.criterium="LMS", Stao=NA, hidden.layer="tansig",
+#                output.layer="purelin", method="ADAPTgdwm")
+#   purchaseModel2 <- train(purchasNet, XScaling, yScaling,  error.criterium="LMS", report=TRUE, show.step=100, n.shows=5)
+#   
   
   # test on train set, evaluate
   predictOnTrainScaling <- predict(purchaseModel, XScaling)
   predictOnTrain <- unscale01(predictOnTrainScaling, yMAX, yMIN)
   errorOnTrain = mean_squared_error(y, predictOnTrain)
+  print ("errorOnTrain : ")
+  print (errorOnTrain)
+  
+#   predictOnTrainScaling2 <- sim.MLPnet(purchaseModel2$net, XScaling)
+#   predictOnTrain2 <- unscale01(predictOnTrainScaling2, yMAX, yMIN)
+#   errorOnTrain2 = mean_squared_error(y, predictOnTrain2)
+  
+  plot(predictOnTrain, type = 'l', col = 'blue')
+#   lines(predictOnTrain2, col = 'green')
+  lines(y, col = 'red')
   
   # test on test set
   predictDays = 31
@@ -137,6 +156,11 @@ if (online == 0) {
   predictOnTestScaling <- matrix(predictOnTestScaling, ncol = OutputTimeLength)
   predictOnTest <- unscale01(predictOnTestScaling, yMAX, yMIN)
   errorOnTest <- mean_squared_error(yTest, predictOnTest)
+  print ("errorOnTest : ")
+  print (errorOnTest)
+  
+  plot(predictOnTest, type = 'l', col = 'blue')
+  lines(yTest, col = 'red')
   
   # write predict on test set into file, need to re-evaluate on Python
   # or just write the mean_squared_error and errorVar
