@@ -6,25 +6,17 @@ from easyRude import purchaseRedeemPredictLocalAndErrorVar, purchaseRedeemModelE
 from easyRude import purchaseRedeemPredictLocalAndErrorVarGarch, purchaseRedeemPredictOnlineEasyGarch
 pwd = 'z:\\theblueisland\\'
 arimaWeightFile = pwd + 'arimaWeightFile.csv'
-modelTime = ['2013-11-01', '2014-03-01', '2014-04-01']
+modelTime = ['2013-11-01', '2014-03-01', '2014-04-01', '2014-05-01']
 modelOrder = {'2013-11-01' : ([8, 1, 8], [14, 1, 14]),
                 '2014-03-01' : ([12, 1, 12], [6, 1, 7]),
-                '2014-04-01' : ([13, 1, 14], [13, 1, 14])}
-# modelTime = ['2013-11-01', '2014-03-01', '2014-04-01', '2014-05-01']
-# modelOrder = {'2013-11-01' : ([8, 1, 8], [14, 1, 14]),
-#                 '2014-03-01' : ([12, 1, 12], [6, 1, 7]),
-#                 '2014-04-01' : ([13, 1, 14], [13, 1, 14]),
-#                 '2014-05-01' : ([12, 2, 12], [14, 1, 15])}
-                
-garchWeightFile = pwd + 'garchWeightFile.csv'  
-garchModelTime = ['2013-11-01', '2014-03-01']
-garchModelOrder = { '2013-11-01' : ([20, 3], [8, 8]),
-                '2014-03-01' : ([8, 7], [7, 8])}          
-# garchModelTime = ['2013-07-01', '2013-11-01', '2014-03-01', '2014-04-01']
-# garchModelOrder = {'2013-07-01' : ([20, 3], [20, 8]),
-#                 '2013-11-01' : ([20, 3], [8, 8]),
-#                 '2014-03-01' : ([8, 7], [7, 8]),
-#                 '2014-04-01' : ([7, 11], [8, 10])}
+                '2014-04-01' : ([13, 1, 14], [13, 1, 14]),
+                '2014-05-01' : ([12, 2, 12], [14, 1, 15])}
+                      
+garchModelTime = ['2013-07-01', '2013-11-01', '2014-03-01', '2014-04-01']
+garchModelOrder = {'2013-07-01' : ([20, 3], [20, 8]),
+                '2013-11-01' : ([20, 3], [8, 8]),
+                '2014-03-01' : ([8, 7], [7, 8]),
+                '2014-04-01' : ([7, 11], [8, 10])}
                 
 weightArimaGarchFile = pwd + 'weightArimaGarchFile.csv'
 

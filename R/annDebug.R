@@ -59,8 +59,8 @@ purchaseTotalTest <- purchaseRedeemTotalTest$V1
 InputTimeLength = 6
 OutputTimeLength = 1
 
-inputTimeLengthMin <- 4
-inputTimeLengthMax <- 30
+inputTimeLengthMin <- 25
+inputTimeLengthMax <- 25
 neuronNumberMin <- 4
 
 error <- vector(length = inputTimeLengthMax)
@@ -131,6 +131,6 @@ for (InputTimeLength in inputTimeLengthMin : inputTimeLengthMax) {
     
     errorSon[neuronNumber] <- errorOnTest
   }
-  sort(errorSon)
-  error[InputTimeLength] <- errorSon[neuronNumberMin + 1]
+  errorSonSorted <- sort(errorSon)
+  error[InputTimeLength] <- errorSonSorted[neuronNumberMin + 1]
 }
