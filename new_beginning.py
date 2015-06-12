@@ -22,6 +22,6 @@ from multiDateRange import arimaMultiModelOnline, assembleARIMAandGARCHOnline
 #                                                         
 # online = pd.concat([purchasePredict, redeemPredict], axis = 1)
 
-online = assembleARIMAandGARCHOnline()
+online = arimaMultiModelOnline()
 
 online.to_csv('z:\\theblueisland\\tc_comp_predict_table.csv', header = None, date_format = "%Y%m%d")

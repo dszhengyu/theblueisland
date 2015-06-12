@@ -300,7 +300,7 @@ def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
     purchaseYPredict.plot(title = 'multiModel-purchase', label = 'purchasePredict', legend = True)
     purchaseYActual = yPurchaseRedeemTotal['total_purchase_amt']
     print ('modelTime = ', modelTime)
-    print ("@@@@@@@@@@purchaseNoNew mean_squared_error = ", 
+    print ("@@@@@@@@@@ purchase mean_squared_error = ", 
             mean_squared_error(purchaseYActual, purchaseYPredict))
     purchaseErrorVar = (np.abs(purchaseYActual - purchaseYPredict) / purchaseYActual).var()
     
@@ -310,7 +310,7 @@ def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
     redeemYPredict.plot(title = 'multiModel-redeem', label = 'redeemPredict', legend = True)
     redeemYActual = yPurchaseRedeemTotal['total_redeem_amt']
     print ('modelTime = ', modelTime)
-    print ("@@@@@@@@@@redeemNoNew mean_squared_error = ", 
+    print ("@@@@@@@@@@redeem  mean_squared_error = ", 
             mean_squared_error(redeemYActual, redeemYPredict))
     redeemErrorVar = (np.abs(redeemYActual - redeemYPredict) / redeemYPredict).var()
     

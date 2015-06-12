@@ -39,13 +39,13 @@ def updateAndEvaluateArimaWeight():
         errorVar.ix[dateSingle] = errorVarSingle
     errorVarSum = errorVar.sum()
     weight = ((errorVarSum - errorVar) / errorVarSum) / (len(modelTime) - 1)
-    weight.index.name = 'date'
+    weight.index.name = 'report_date'
     weight.to_csv(arimaWeightFile)
     
     # evaluate assembly weight
     purchaseRedeemPredict = pd.DataFrame(index = pd.date_range('20140801', '20140831'),
                                         columns = ['purchasePredict', 'redeemPredict'])
-    purchaseRedeemPredict.index.name = 'date'
+    purchaseRedeemPredict.index.name = 'report_date'
     purchaseRedeemPredict.fillna(0, inplace = True)
     for dateSingle in modelTime:
         predictSingle = predict[dateSingle]
@@ -53,15 +53,28 @@ def updateAndEvaluateArimaWeight():
         purchaseRedeemPredict['purchasePredict'] += predictSingle[0] * weightSingle['purchaseError']
         purchaseRedeemPredict['redeemPredict'] += predictSingle[1] * weightSingle['redeemError']
     multiErrorVar = purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime)
-    
     print ('model weight: ')
     print (weight)
     print ('origin errorVar: ')
     print (errorVar)
     print ('errorVar after assembly: ')
     print ('purchaseErrorVar = ', multiErrorVar[0], 'redeemErrorVar = ', multiErrorVar[1])
+    print ()
+    
+    # merge day in week
+    purchaseRedeemPredictDayInWeek = purchaseRedeemPredict.copy()
+    localDayInWeek = pd.read_csv('z:\\theblueisland\\raw_data\\localDayInWeek.csv', 
+                                index_col = 'report_date', parse_dates = ['report_date'])
+    
+    # for date in localDayInWeek.index:
+    #     purchaseRedeemPredictDayInWeek.ix[date] = localDayInWeek.ix[date]
+    purchaseRedeemPredictDayInWeek.ix[localDayInWeek.index] = localDayInWeek
+    multiErrorVarDayInWeek = purchaseRedeemModelEvaluate(purchaseRedeemPredictDayInWeek, ['day in week'])
+    print ('day in week begin')
+    print ('errorVar after single date: ')
+    print ('purchaseErrorVar = ', multiErrorVarDayInWeek[0], 'redeemErrorVar = ', multiErrorVarDayInWeek[1])
 
-    return (purchaseRedeemPredict, multiErrorVar)
+    return (purchaseRedeemPredictDayInWeek, multiErrorVarDayInWeek)
 # updateAndEvaluateArimaWeight()
     
 def updateAndEvaluateGarchWeight():
