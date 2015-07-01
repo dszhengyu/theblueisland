@@ -1,6 +1,6 @@
-# orderUsed = c(8, 1, 8)
-# predictDays = 31
-# auto = 0
+orderUsed = c(8, 1, 8)
+predictDays = 31
+auto = 0
 
 train <- read.csv('z:\\theblueisland\\R\\trainFileARIMA.csv', header = FALSE)
 if (auto == 0) {

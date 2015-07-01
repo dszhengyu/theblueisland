@@ -1,9 +1,6 @@
 run_online = F
 
 generateXy <- function(timeVector, XLength, yLength){
-  #   timeVector <- purchaseTotalTrain
-  #   XLength <- 1
-  #   yLength <- 1
   
   rowCount <- length(timeVector) - (XLength + yLength - 1)
   XIndex <- vector(length = (rowCount * XLength))
@@ -48,14 +45,6 @@ unscale01 <- function(X, max, min) {
 
 annTrainPredict <- function(timeVec, testVec, wholeVec, inputTimeLen, 
                             outPutTimelen, hiddenLayer, predictDays = 31, online = 0) {
-  #   timeVec <- purchaseTotalTrain
-  #   testVec <- purchaseTotalCV
-  #   wholeVec <- purchaseTotalWhole
-  #   inputTimeLen <- 3
-  #   outPutTimelen <- 1
-  #   hiddenLayer <- 16
-  #   predictDays <- 31
-  #   online <- 1
   
   totalXyXTest <- generateXy(timeVec, inputTimeLen, outPutTimelen)
   X <- totalXyXTest$X
@@ -63,45 +52,23 @@ annTrainPredict <- function(timeVec, testVec, wholeVec, inputTimeLen,
   XTest <- totalXyXTest$XTest
   yTest <- matrix(testVec, ncol = outPutTimelen)
   
-  # set X , y and XTest to [0, 1]
   XMAX = sapply(X, max)
   XMin = sapply(X, min)
-  # XScaling <- sapply(X, scale01, XMAX, XMin)
   XScaling <- data.frame((X - XMin)/(XMAX - XMin))
-  #   XTestScaling <- sapply(XTest, scale01, XMAX, XMin)
   XTestScaling <- data.frame((XTest - XMin)/(XMAX - XMin))
   yMAX = sapply(y, max)
   yMIN = sapply(y, min)
-  #   yScaling <- sapply(y, scale01, yMAX, yMIN)
   yScaling <- data.frame((y - yMIN)/(yMAX - yMIN))
  
-  #   print (XScaling)
-  #   print (yScaling)
-  # set ANN model and train
   model <- nnet(XScaling, yScaling, size = hiddenLayer, linout = TRUE, trace = FALSE)
   
-  # test on train set, evaluate
-  #   predictOnTrainScaling <- predict(model, XScaling)
-  #   predictOnTrain <- unscale01(predictOnTrainScaling, yMAX, yMIN)
-  #   errorOnTrain = mean_squared_error(y, predictOnTrain)
-  #   print ("errorOnTrain : ")
-  #   print (errorOnTrain)
-  #   plot(y, type = 'l', col = 'blue')
-  #   lines(predictOnTrain, col = 'red')
   
-  # test on test set
-  # predictDays = 31
   XTestScaling <- c(unlist(XTestScaling[1,]), 1 : predictDays)
   for (i in seq(from = 1, to = predictDays, by = outPutTimelen)) {
     trainFrom <- i
     trainTo <- i + inputTimeLen - 1
     predictFrom <- inputTimeLen + i
     predictTo <- predictFrom + outPutTimelen - 1
-    #     print (trainFrom)
-    #     print (trainTo)
-    #     print (predictFrom)
-    #     print (predictTo)
-    #     print ('\n')
     xSingle <- data.frame(matrix(XTestScaling[trainFrom : trainTo], ncol = inputTimeLen))
     predictSingle <- predict(model, xSingle)
     XTestScaling[predictFrom : predictTo] = predictSingle[1]
@@ -110,16 +77,11 @@ annTrainPredict <- function(timeVec, testVec, wholeVec, inputTimeLen,
   predictFinalTo <- length(XTestScaling)
   predictOnTestScaling <- XTestScaling[predictFinalFrom : predictFinalTo]
   predictOnTestScaling <- matrix(predictOnTestScaling, ncol = outPutTimelen)
-  #   predictOnTest <- unscale01(predictOnTestScaling, yMAX, yMIN)
   predictOnTest <- (predictOnTestScaling * (yMAX - yMIN) + yMIN)
   
   testVec <- matrix(testVec, ncol = outPutTimelen)
   errorOnTest <- mean_squared_error(testVec, predictOnTest)
   errorVarOnTest <- error_variance(testVec, predictOnTest)
-  #   print ("errorOnTest : ")
-  #   print (errorOnTest)
-  #   plot(yTest, type = 'l', col = 'blue')
-  #   lines(predictOnTest, col = 'red')
   
   predictOnline <- 0
   if (online == 1) {
@@ -133,36 +95,19 @@ annTrainPredict <- function(timeVec, testVec, wholeVec, inputTimeLen,
 }
 
 annGridSearch <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax, predictDays) {
-  # tmp code below, use for debug
-  # purchaseParam <- annGridSearch(purchaseTotalTrain, purchaseTotalTest, 10)
-  #   timeVec <- purchaseTotalTrain
-  #   cvVec <- purchaseTotalCV
-  #   testVec <- purchaseTotalTest
-  #   wholeVec <- purchaseTotalWhole
-  #   inputTimeLengthMax <- 10
-  #   predictDays <- 31
   
-  ##### Cross-validation or not ###########
   trainSet <- c(timeVec, cvVec)
   
-  #   error <- vector(length = inputTimeLengthMax)
   errorVar <- vector(length = inputTimeLengthMax)
   index <- vector(length = inputTimeLengthMax)
   for (inputSingle in 1 : inputTimeLengthMax) {
-    #     cat ('\n', "inputSingle = ", inputSingle, '\n')
     hiddenLayerMax <- as.integer(sqrt(inputSingle + 1) + 13)
-    #     errorSingle <- vector(length = hiddenLayerMax)
     errorVarSingle <- vector(length = hiddenLayerMax)
     for (hiddenSingle in 1 : hiddenLayerMax) {
-      #       cat ("hiddenSingle = ", hiddenSingle, '\n')
       result <- annTrainPredict(trainSet, testVec, wholeVec, inputTimeLengthMax, 
                                 outPutTimelen = 1, hiddenSingle, predictDays)
-      #       MSESingle <- result$MSE
       errorVarSingleValue <- result$errorVar
-      #       errorSingle[hiddenSingle] <- MSESingle
       errorVarSingle[hiddenSingle] <- errorVarSingleValue
-      #       print (MSESingle)
-      #       print ("****************************************************************")
     }
     errorVar[inputSingle] <- min(errorVarSingle)
     index[inputSingle] <- which.min(errorVarSingle)
@@ -170,21 +115,12 @@ annGridSearch <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax,
   optimalInput <- which.min(errorVar)
   optimalHidden <- index[optimalInput]
   minErrorVar <- errorVar[optimalInput]
-  # use test
   trainSet <- c(timeVec, cvVec)
   result <- annTrainPredict(trainSet, testVec, wholeVec, optimalInput, outPutTimelen = 1, 
                             optimalHidden, predictDays, online = 1)
   predict <- result$predict
-  plot(cvVec, type = 'l', main = 'GridSearchResult', col = 'red')
-  lines(predict, col = 'blue')
-  cat ("optimalInput = ", optimalInput, '\n')
-  cat ("optimalHidden = ", optimalHidden, '\n')
-  #   print ("predict = ")
-  #   print (predict)
   finalErrorVar <- result$errorVar
-  cat ("finalErrorVar = ", finalErrorVar, '\n')
   onlineSet <- result$predictOnline
-  plot(onlineSet, type = 'l', main = 'Online', col = 'orange')
   
   return (list(input = optimalInput, hidden = optimalHidden, predict = predict, 
                finalErrorVar = finalErrorVar, onlineSet = onlineSet))
@@ -193,20 +129,12 @@ annGridSearch <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax,
 annEnsemble <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax, 
                         modelCount = 3, predictDays = 31)
 {
-  #   timeVec <- purchaseTotalTrain
-  #   cvVec <- purchaseTotalCV
-  #   testVec <- purchaseTotalTest
-  #   wholeVec <- purchaseTotalWhole
-  #   inputTimeLengthMax <- 20
-  #   modelCount = 5
-  #   predictDays = 31
   
   errorVar <- vector(length = modelCount)
   weight <- vector(length = modelCount)
   predict <- matrix(0, nrow = predictDays, ncol = modelCount)
   online <- matrix(0, nrow = 30, ncol = modelCount)
   for (i in 1 : modelCount) {
-    cat('\n', "*********** In model ", i, '********************\n')
     result <- annGridSearch(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax, predictDays)
     errorVar[i] <- result$finalErrorVar
     predict[, i] <- result$predict
@@ -220,22 +148,14 @@ annEnsemble <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax,
     predictFinal <-  predictFinal + predict[, i] * weight[i]
     onlineFinal <- onlineFinal + online[, i] * weight[i]
   }
-  plot(testVec, type = 'l', col = 'red', main = 'Local-Ensemble')
-  lines(predictFinal, col = 'blue')
   testVec <- matrix(testVec, ncol = 1)
   errorLocal <- mean_squared_error(testVec, predictFinal)
-  cat('\n', '%%%%%%%%%%%%%%%%%%%%%%%%%% Final &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', '\n')
-  cat ("errorLocal : ", errorLocal, '\n')
   errorvarLocal <- error_variance(testVec, predictFinal)
-  cat ("errorvarLocal : ", errorvarLocal, '\n')
-  plot(onlineFinal, type = 'l', col = 'orange', main = 'Online-Ensemble')
   
   return (list(localPredict = predictFinal, onlinePredict = onlineFinal))
 }
 
-################################################ subroutine up there ################################
 
-# impport library
 library('nnet')
 
 if (run_online == F) {
@@ -246,7 +166,6 @@ if (run_online == F) {
 
 purchaseTotal <- purchaseRedeemTotal$purchase
 redeemTotal <- purchaseRedeemTotal$redeem
-# split train and test, split day is 20140801
 startDate <- 244
 train_cv_date <- 366
 cv_test_date <- 397
@@ -256,31 +175,26 @@ purchaseRedeemTotalCV <- purchaseRedeemTotal[train_cv_date : (cv_test_date - 1),
 purchaseRedeemTotalTest <- purchaseRedeemTotal[cv_test_date : end_date, ]
 purchaseRedeemTotalWhole <- purchaseRedeemTotal[startDate : end_date, ]
 
-################# purchase############################################################
 purchaseTotalTrain <- purchaseRedeemTotalTrain$purchase
 purchaseTotalCV <- purchaseRedeemTotalCV$purchase
 purchaseTotalTest <- purchaseRedeemTotalTest$purchase
 purchaseTotalWhole <- purchaseRedeemTotalWhole$purchase
 
-cat('\n', '@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Purchase &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', '\n')
 purchaseResult <- annEnsemble(purchaseTotalTrain, purchaseTotalCV, purchaseTotalTest, purchaseTotalWhole,
                               inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
 purchaseOnline <- purchaseResult$onlinePredict
 
-############### redeem #########################################
 redeemTotalTrain <- purchaseRedeemTotalTrain$redeem
 redeemTotalCV <- purchaseRedeemTotalCV$redeem
 redeemTotalTest <- purchaseRedeemTotalTest$redeem
 redeemTotalWhole <- purchaseRedeemTotalWhole$redeem
 
-cat('\n', '@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Redeem &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&', '\n')
 redeemResult <- annEnsemble(redeemTotalTrain, redeemTotalCV, redeemTotalTest, redeemTotalWhole, 
                             inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
 redeemOnline <- redeemResult$onlinePredict
 
-########$$$$$$$$$$$$$$$$$$$$$ merge online set $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$########
 startDate <- as.Date('2014-09-01')
 dateSeries <- vector(length = 30)
 for (i in 1 : 30) {

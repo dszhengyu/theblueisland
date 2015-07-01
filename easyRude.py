@@ -34,9 +34,8 @@ def AcfPacfPlot(set, title):
     plt.figure()
     DataFrame(acf(set)).plot(title = title + 'ACF', kind = 'bar')
     DataFrame(pacf(set)).plot(title = title + 'PACF', kind = 'bar')
-   
-def analyseARIMA():
-    beginDate = '2014-02-01'
+
+def getPurchaseRedeemTotal():
     user_balance = get_user_balance()
     user_balance = user_balance[user_balance['report_date'] >= beginDate]
     user_balance_clean = get_user_balance_clean()
@@ -45,6 +44,12 @@ def analyseARIMA():
     # sum data
     timeGroup = user_balance_clean.groupby(['report_date'])
     purchaseRedeemTotal = timeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    
+    return purchaseRedeemTotal
+   
+def analyseARIMA():
+    beginDate = '2014-02-01'
+    purchaseRedeemTotal = getPurchaseRedeemTotal()
 
     # analyse acf, pacf
     AcfPacfPlot(purchaseRedeemTotal['total_purchase_amt'], 'purchase')
@@ -65,15 +70,8 @@ def analyseARIMA():
     AcfPacfPlot(rDelta1, 'redeemDelta1')
 
 def purchaseRedeemTotalFactory(beginDate = '2013-07-01'):
-    ## get data
-    user_balance = get_user_balance()
-    user_balance = user_balance[user_balance['report_date'] >= beginDate]
-    user_balance_clean = get_user_balance_clean()
-    user_balance_clean = user_balance_clean[user_balance_clean['report_date'] >= beginDate]
     
-    ## sum purchase and redeem
-    timeGroup = user_balance_clean.groupby(['report_date'])
-    purchaseRedeemTotal = timeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    purchaseRedeemTotal = getPurchaseRedeemTotal()
     
     # split X y
     split_time = datetime.strptime('20140801', "%Y%m%d")
@@ -286,9 +284,7 @@ def purchaseRedeemPredictLocalAndErrorVarGarch(beginDate, order,
     
     
 def purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime):
-    user_balance_clean = get_user_balance_clean()
-    timeGroup = user_balance_clean.groupby(['report_date'])
-    purchaseRedeemTotal = timeGroup['total_purchase_amt', 'total_redeem_amt'].sum()
+    purchaseRedeemTotal = getPurchaseRedeemTotal()
     split_time = datetime.strptime('20140801', "%Y%m%d")
     user_balance_y = user_balance_clean[user_balance_clean['report_date'] >= split_time]
     yTimeGroup = user_balance_y.groupby(['report_date'])
