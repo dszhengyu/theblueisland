@@ -7,10 +7,10 @@ from easyRude import purchaseRedeemPredictLocalAndErrorVarGarch, purchaseRedeemP
 pwd = 'z:\\theblueisland\\'
 arimaWeightFile = pwd + 'arimaWeightFile.csv'
 modelTime = ['2013-11-01', '2014-03-01', '2014-04-01', '2014-05-01']
-modelOrder = {'2013-11-01' : ([8, 1, 8], [14, 1, 14]),
-                '2014-03-01' : ([12, 1, 12], [6, 1, 7]),
-                '2014-04-01' : ([13, 1, 14], [13, 1, 14]),
-                '2014-05-01' : ([12, 2, 12], [14, 1, 15])}
+modelOrder = {'2013-11-01' : (([6, 1, 5], [1, 1, 0]), ([2, 1, 2], [1, 1, 0])),
+                '2014-03-01' : (([0, 1, 2], [1, 1, 0]), ([2, 1, 2], [1, 1, 0])),
+                '2014-04-01' : (([2, 1, 2], [1, 1, 0]), ([2, 1, 2], [1, 1, 0])),
+                '2014-05-01' : (([2, 1, 2], [1, 1, 0]), ([2, 1, 2], [1, 1, 0]))}
                       
 garchModelTime = ['2013-07-01', '2013-11-01', '2014-03-01', '2014-04-01']
 garchModelOrder = {'2013-07-01' : ([20, 3], [20, 8]),
@@ -85,9 +85,10 @@ def updateAndEvaluateArimaWeight():
     print ()
     
     # merge day in week
-    purchaseRedeemPredictDayInWeek, multiErrorVarDayInWeek = localMergeDayInWeek(purchaseRedeemPredict)
+    #purchaseRedeemPredictDayInWeek, multiErrorVarDayInWeek = localMergeDayInWeek(purchaseRedeemPredict)
+    #return (purchaseRedeemPredictDayInWeek, multiErrorVarDayInWeek)
     
-    return (purchaseRedeemPredictDayInWeek, multiErrorVarDayInWeek)
+    return (purchaseRedeemPredict, multiErrorVar)
 # updateAndEvaluateArimaWeight()
     
 def updateAndEvaluateGarchWeight():
@@ -168,7 +169,7 @@ def assembleARIMAandGARCH():
 
 #dateSingle = '2014-05-01'
 def arimaMultiModelOnline():
-    weight = pd.read_csv(arimaWeightFile, index_col = 'date')
+    weight = pd.read_csv(arimaWeightFile, index_col = 'report_date')
     purchaseRedeemPredict = pd.DataFrame(index = pd.date_range('20140901', '20140930'),
                                         columns = ['purchasePredict', 'redeemPredict'])
     purchaseRedeemPredict.index.name = 'date'
@@ -183,8 +184,10 @@ def arimaMultiModelOnline():
         weightSingle = weight.ix[dateSingle]
         purchaseRedeemPredict['purchasePredict'] += purchasePredict * weightSingle['purchaseError']
         purchaseRedeemPredict['redeemPredict'] += redeemPredict * weightSingle['redeemError']
-    purchaseRedeemPredictDayInWeek = onlineMergeDayInWeek(purchaseRedeemPredict)
-    return purchaseRedeemPredictDayInWeek
+    #purchaseRedeemPredictDayInWeek = onlineMergeDayInWeek(purchaseRedeemPredict)
+    #return purchaseRedeemPredictDayInWeek
+    return purchaseRedeemPredict
+# arimaMultiModelOnline()
     
 def garchMultiModelOnline():
     weight = pd.read_csv(garchWeightFile, index_col = 'date')

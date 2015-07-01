@@ -1,8 +1,8 @@
 run_online = F
 
-runArima <- function(vec, order, predictDays = 30) {
+runArima <- function(vec, order, seasonal, predictDays = 30) {
   library("forecast")
-  fit <- Arima(vec, order)
+  fit <- Arima(vec, order = order, seasonal = list(order = seasonal, period = 7))
   pred <- forecast(fit, h = predictDays)
   #plot(pred)
   predict <- pred$mean
@@ -17,11 +17,14 @@ if (run_online == F) {
   purchaseRedeemTotal <- dataset1
 }
 
+# choose date from 2013-11-01
+purchaseRedeemTotal <- purchaseRedeemTotal[124 : 427, ]
+
 purchaseTotal <- purchaseRedeemTotal$purchase
 redeemTotal <- purchaseRedeemTotal$redeem
 
-purchasePredict <- runArima(purchaseTotal, c(3, 1, 3), 30)
-redeemPredict <- runArima(redeemTotal, c(3, 1, 2), 30)
+purchasePredict <- runArima(purchaseTotal, c(6, 1, 5), c(1, 1, 0), 30)
+redeemPredict <- runArima(redeemTotal, c(2, 1, 2), c(1, 1, 0), 30)
 
 purchaseOnline <- purchasePredict
 redeemOnline <- redeemPredict

@@ -23,4 +23,6 @@ for file in files:
     rFileClean.close()
 
 
-
+predictOnline = pd.read_csv('z:\\theblueisland\\Season2\\predict_online.csv',
+                            parse_dates = ['report_date'], index_col = ['report_date'])
+predictOnline.plot()

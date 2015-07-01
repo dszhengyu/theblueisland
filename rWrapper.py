@@ -25,10 +25,10 @@ predictFileANN = rDir + 'predictFileANN.csv'
 residualsFileANN = rDir + 'residualsFileANN.csv'
 rFileANN = rDir + 'annPredict.R'
 
-def r_ARIMA_predict(train, fromDate, toDate, order = [0, 0, 0], auto = 0):
+def r_ARIMA_predict(train, fromDate, toDate, orderTotal = ([1, 1, 1], [1, 1, 0]), auto = 0):
     # use file to communicate first
     train.to_csv(trainFileARIMA, index = None)
-    print ('order = ', order)
+    print ('orderTotal = ', orderTotal)
     #print ('fromDate: ', fromDate)
     #print ('toDate: ', toDate)
     
@@ -37,9 +37,12 @@ def r_ARIMA_predict(train, fromDate, toDate, order = [0, 0, 0], auto = 0):
     f = datetime.strptime(fromDate, "%Y-%m-%d")
     predictDays = (t - f).days + 1
     predictDaysLine = 'predictDays = %s\n' % (predictDays)
+    order = orderTotal[0]
     orderParameterLine = 'orderUsed = c(%s, %s, %s)\n' % (order[0], order[1], order[2])
+    seasonal = orderTotal[1]
+    seasonalParameterLine = 'seasonalUsed = c(%s, %s, %s)\n' % (seasonal[0], seasonal[1], seasonal[2])
     autoParameterLine = 'auto = %s\n' % (auto)
-    parametersLine = orderParameterLine + predictDaysLine + autoParameterLine
+    parametersLine = orderParameterLine + seasonalParameterLine + predictDaysLine + autoParameterLine
     
     # manipulate in R
     rScript = open(rFileARIMA).read()

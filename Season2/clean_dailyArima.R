@@ -1,8 +1,8 @@
 run_online = T
 
-runArima <- function(vec, order, predictDays = 30) {
+runArima <- function(vec, order, seasonal, predictDays = 30) {
   library("forecast")
-  fit <- Arima(vec, order)
+  fit <- Arima(vec, order = order, seasonal = list(order = seasonal, period = 7))
   pred <- forecast(fit, h = predictDays)
   predict <- pred$mean
   return (predict)
@@ -10,17 +10,17 @@ runArima <- function(vec, order, predictDays = 30) {
 
 
 if (run_online == F) {
-                                  header = F)
-  purchaseTotal <- purchaseRedeemTotal$V2
-  redeemTotal <- purchaseRedeemTotal$V3
 } else {
   purchaseRedeemTotal <- dataset1
-  purchaseTotal <- purchaseRedeemTotal$purchase
-  redeemTotal <- purchaseRedeemTotal$redeem
 }
 
-purchasePredict <- runArima(purchaseTotal, c(3, 1, 3), 30)
-redeemPredict <- runArima(redeemTotal, c(3, 1, 2), 30)
+purchaseRedeemTotal <- purchaseRedeemTotal[124 : 427, ]
+
+purchaseTotal <- purchaseRedeemTotal$purchase
+redeemTotal <- purchaseRedeemTotal$redeem
+
+purchasePredict <- runArima(purchaseTotal, c(6, 1, 5), c(1, 1, 0), 30)
+redeemPredict <- runArima(redeemTotal, c(2, 1, 2), c(1, 1, 0), 30)
 
 purchaseOnline <- purchasePredict
 redeemOnline <- redeemPredict
@@ -34,6 +34,5 @@ for (i in 1 : 30) {
 online <- data.frame(report_date, purchaseOnline, redeemOnline)
 
 if (run_online == F) {
-              row.names = FALSE, col.names = FALSE, sep = ',')
 }
 dataname <- online

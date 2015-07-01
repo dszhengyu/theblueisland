@@ -1,13 +1,15 @@
-orderUsed = c(8, 1, 8)
-predictDays = 31
-auto = 0
+# orderUsed = c(2, 1, 2)
+# seasonalUsed = c(1, 1, 0)
+# predictDays = 31
+# auto = 0
 
 train <- read.csv('z:\\theblueisland\\R\\trainFileARIMA.csv', header = FALSE)
 if (auto == 0) {
   library('stats')
-  fit <-arima(train, order = orderUsed)
+  fit <-arima(train, order = orderUsed, seasonal = list(order = seasonalUsed, period = 7))
   pre <- predict(fit, predictDays)
   predict <- pre[["pred"]]
+  
 } else {
   library('forecast')
   fit <-auto.arima(train, start.p = 5, start.q = 5)

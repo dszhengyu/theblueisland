@@ -1,4 +1,4 @@
-run_online = F
+run_online = T
 
 generateXy <- function(timeVector, XLength, yLength){
   
@@ -159,7 +159,6 @@ annEnsemble <- function(timeVec, cvVec, testVec, wholeVec, inputTimeLengthMax,
 library('nnet')
 
 if (run_online == F) {
-  purchaseRedeemTotal <- read.csv('z:\\theblueisland\\Season2\\daily_purchase_redeem.csv')
 } else {
   purchaseRedeemTotal <- dataset1
 }
@@ -204,7 +203,6 @@ for (i in 1 : 30) {
 online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
 
 if (run_online == F) {
-  write.table(x = online, file = 'z:\\theblueisland\\Season2\\tc_comp_predict_table.csv', row.names = FALSE, col.names = FALSE, sep = ',')
 }
 
 dataname <- online
