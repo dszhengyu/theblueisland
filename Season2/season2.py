@@ -3,8 +3,9 @@ purchaseRedeemTotal = pd.read_csv('z:\\theblueisland\\Season2\\daily_purchase_re
                             parse_dates = ['report_date'], index_col = ['report_date'])
 purchaseRedeemTotal.plot()
 
+## clean R script
 
-files = ['dailyArima.R', 'dailyANN.R']
+files = ['dailyArima.R', 'dailyANN.R', 'dot_for_all.R']
 
 for file in files:
     badChar = ['#', 'cat', 'print', 'plot', 'lines']
@@ -22,7 +23,11 @@ for file in files:
     rFileClean.write(''.join(rFileNoComment))
     rFileClean.close()
 
+## compare online set
 
-predictOnline = pd.read_csv('z:\\theblueisland\\Season2\\predict_online.csv',
-                            parse_dates = ['report_date'], index_col = ['report_date'])
-predictOnline.plot()
+onlineFile = ['dailyANN', 'dailyARIMA', 'arimaMultiModel', 'dot_for_all']
+for onlineSingle in onlineFile:
+    predictOnline = pd.read_csv('z:\\theblueisland\\Season2\\online_' + onlineSingle + '.csv',
+                                names = ['report_date', 'purchase', 'redeem'], 
+                                parse_dates = ['report_date'], index_col = ['report_date'])
+    predictOnline.plot(title = onlineSingle)

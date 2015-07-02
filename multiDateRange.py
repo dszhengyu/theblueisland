@@ -127,6 +127,7 @@ def updateAndEvaluateGarchWeight():
     
     print ('model weight: ')
     print (weight)
+    print ()
     print ('origin errorVar: ')
     print (errorVar)
     print ('errorVar after assembly: ')

@@ -290,7 +290,7 @@ for (i in 1 : 30) {
 online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
 
 if (run_online == F) {
-  write.table(x = online, file = 'z:\\theblueisland\\Season2\\tc_comp_predict_table.csv', row.names = FALSE, col.names = FALSE, sep = ',')
+  write.table(x = online, file = 'z:\\theblueisland\\Season2\\online_dailyANN.csv', row.names = FALSE, col.names = FALSE, sep = ',')
 }
 
 dataname <- online
