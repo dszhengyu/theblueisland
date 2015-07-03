@@ -75,6 +75,7 @@ def updateAndEvaluateArimaWeight():
         weightSingle = weight.ix[dateSingle]
         purchaseRedeemPredict['purchasePredict'] += predictSingle[0] * weightSingle['purchaseError']
         purchaseRedeemPredict['redeemPredict'] += predictSingle[1] * weightSingle['redeemError']
+    purchaseRedeemPredict.to_csv('z:\\theblueisland\\Season2\\local_arimaMultiModel.csv')
     multiErrorVar = purchaseRedeemModelEvaluate(purchaseRedeemPredict, modelTime)
     print ('model weight: ')
     print (weight)
@@ -173,7 +174,7 @@ def arimaMultiModelOnline():
     weight = pd.read_csv(arimaWeightFile, index_col = 'report_date')
     purchaseRedeemPredict = pd.DataFrame(index = pd.date_range('20140901', '20140930'),
                                         columns = ['purchasePredict', 'redeemPredict'])
-    purchaseRedeemPredict.index.name = 'date'
+    purchaseRedeemPredict.index.name = 'report_date'
     purchaseRedeemPredict.fillna(0, inplace = True)
     print ()
     print ('arimaMultiModelOnline')

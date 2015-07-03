@@ -14,16 +14,39 @@ if (run_online == F) {
   purchaseRedeemTotal <- dataset1
 }
 
-purchaseRedeemTotal <- purchaseRedeemTotal[124 : 427, ]
+localPurchaseRedeemTotal <- purchaseRedeemTotal[124 : 396, ]
 
-purchaseTotal <- purchaseRedeemTotal$purchase
-redeemTotal <- purchaseRedeemTotal$redeem
+localPurchaseTotal <- localPurchaseRedeemTotal$purchase
+localRedeemTotal <- localPurchaseRedeemTotal$redeem
 
-purchasePredict <- runArima(purchaseTotal, c(6, 1, 5), c(1, 1, 0), 30)
-redeemPredict <- runArima(redeemTotal, c(2, 1, 2), c(1, 1, 0), 30)
+purchasePredict <- runArima(localPurchaseTotal, c(6, 1, 5), c(1, 1, 0), 31)
+redeemPredict <- runArima(localRedeemTotal, c(2, 1, 2), c(1, 1, 0), 31)
+
+purchaseLocal <- purchasePredict
+redeemLocal <- redeemPredict
+
+onlinePurchaseRedeemTotal <- purchaseRedeemTotal[124 : 427, ]
+
+onlinePurchaseTotal <- onlinePurchaseRedeemTotal$purchase
+onlineRedeemTotal <- onlinePurchaseRedeemTotal$redeem
+
+purchasePredict <- runArima(onlinePurchaseTotal, c(6, 1, 5), c(1, 1, 0), 30)
+redeemPredict <- runArima(onlineRedeemTotal, c(2, 1, 2), c(1, 1, 0), 30)
 
 purchaseOnline <- purchasePredict
 redeemOnline <- redeemPredict
+
+
+startDate <- as.Date('2014-08-01')
+report_date <- vector(length = 31)
+for (i in 1 : 31) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+  startDate <- startDate + 1
+}
+local <- data.frame(report_date, purchaseLocal, redeemLocal)
+
+if (run_online == F) {
+}
 
 startDate <- as.Date('2014-09-01')
 report_date <- vector(length = 30)

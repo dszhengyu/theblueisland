@@ -24,4 +24,4 @@ from multiDateRange import arimaMultiModelOnline, assembleARIMAandGARCHOnline
 
 online = arimaMultiModelOnline()
 
-online.to_csv('z:\\theblueisland\\Season2\\online_arimaMultiModel.csv', header = None, date_format = "%Y%m%d")
+online.to_csv('z:\\theblueisland\\Season2\\online_arimaMultiModel.csv', date_format = "%Y%m%d")

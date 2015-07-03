@@ -36,7 +36,8 @@ error_variance <- function(yActual, yPredict) {
 }
 
 calculateDistance <- function(X, xNew) {
-  return (sqrt(rowSums(t((t(X) - xNew) * (t(X) - xNew)))))
+  unit <- (t(X) - xNew) * (1 : length(xNew))
+  return (sqrt(rowSums(t(unit * unit))))
 }
 
 singleDotPredict <- function(X, y, xNew, trainCount = 20) {
@@ -53,7 +54,9 @@ singleDotPredict <- function(X, y, xNew, trainCount = 20) {
   return (predict[1])
 }
 
-dotPredict <- function(timeVec, testVec, wholeVec, window, step = 1, predictDays = 31, online = 0) {
+dotPredict <- function(timeVec, testVec, wholeVec, 
+                       window, step = 1, trainCount = 20, 
+                       predictDays = 31, online = 0) {
   
   totalXyXTest <- generateXy(timeVec, window, step)
   X <- totalXyXTest$X
@@ -76,7 +79,7 @@ dotPredict <- function(timeVec, testVec, wholeVec, window, step = 1, predictDays
     predictFrom <- window + i
     predictTo <- predictFrom + step - 1
     xSingle <- XTestScaling[trainFrom : trainTo]
-    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, trainCount = 20)
+    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, trainCount)
     XTestScaling[predictFrom : predictTo] = predictSingle
   }
   predictFinalFrom <- window + 1
@@ -106,8 +109,7 @@ dotPredictGridSearch <- function(timeVec, testVec, wholeVec, windowMax, predictD
   for (windowSingle in 2 : windowMax) {
     result <- dotPredict(timeVec, testVec, wholeVec, windowSingle, 
                          step = 1, predictDays, online = 0)
-    MSESingle <- result$MSE
-    errorVar[windowSingle] <- MSESingle
+    errorVar[windowSingle] <- result$errorVar
   }
   
   optimalWindow <- which.min(errorVar)
@@ -149,6 +151,7 @@ purchaseResult <- dotPredictGridSearch(purchaseTotalTrain,
                                        purchaseTotalTest, 
                                        purchaseTotalWhole,
                                        windowMax = 50)
+purchaseLocal <- purchaseResult$predict
 purchaseOnline <- purchaseResult$onlineSet
 
 redeemTotalTrain <- purchaseRedeemTotalTrain$redeem
@@ -159,19 +162,29 @@ redeemResult <- dotPredictGridSearch(redeemTotalTrain,
                                      redeemTotalTest, 
                                      redeemTotalWhole,
                                      windowMax = 50)
-
+redeemLocal <- redeemResult$predict
 redeemOnline <- redeemResult$onlineSet
 
-startDate <- as.Date('2014-09-01')
-dateSeries <- vector(length = 30)
-for (i in 1 : 30) {
-  dateSeries[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+startDate <- as.Date('2014-08-01')
+report_date <- vector(length = 31)
+for (i in 1 : 31) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
   startDate <- startDate + 1
 }
-online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
+local <- data.frame(report_date, purchaseLocal, redeemLocal)
+
+if (run_online == F) {
+}
+
+startDate <- as.Date('2014-09-01')
+report_date <- vector(length = 30)
+for (i in 1 : 30) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+  startDate <- startDate + 1
+}
+online <- data.frame(report_date, purchaseOnline, redeemOnline)
 
 if (run_online == F) {
 }
 
 dataname <- online
-

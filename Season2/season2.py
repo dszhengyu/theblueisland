@@ -1,3 +1,5 @@
+import pandas as pd
+
 purchaseRedeemTotal = pd.read_csv('z:\\theblueisland\\Season2\\daily_purchase_redeem.csv',
                             names = ['report_date', 'total_purchase_amt', 'total_redeem_amt'], 
                             parse_dates = ['report_date'], index_col = ['report_date'])
@@ -5,7 +7,7 @@ purchaseRedeemTotal.plot()
 
 ## clean R script
 
-files = ['dailyArima.R', 'dailyANN.R', 'dot_for_all.R']
+files = ['dailyArima.R', 'dailyANN.R', 'dot_for_all.R', 'merge_model.R']
 
 for file in files:
     badChar = ['#', 'cat', 'print', 'plot', 'lines']
@@ -25,9 +27,14 @@ for file in files:
 
 ## compare online set
 
-onlineFile = ['dailyANN', 'dailyARIMA', 'arimaMultiModel', 'dot_for_all']
-for onlineSingle in onlineFile:
+allMethod = ['dailyANN', 'dailyARIMA', 'dot_for_all', 'merge']
+
+for localSingle in allMethod:
+        predictLocal = pd.read_csv('z:\\theblueisland\\Season2\\local_' + localSingle + '.csv',
+                                parse_dates = ['report_date'], index_col = ['report_date'])
+    predictLocal.plot(title = localSingle)
+
+for onlineSingle in allMethod:
     predictOnline = pd.read_csv('z:\\theblueisland\\Season2\\online_' + onlineSingle + '.csv',
-                                names = ['report_date', 'purchase', 'redeem'], 
                                 parse_dates = ['report_date'], index_col = ['report_date'])
     predictOnline.plot(title = onlineSingle)

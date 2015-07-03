@@ -266,7 +266,9 @@ cat('\n', '@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Purchase &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 purchaseResult <- annEnsemble(purchaseTotalTrain, purchaseTotalCV, purchaseTotalTest, purchaseTotalWhole,
                               inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
+purchaseLocal <- purchaseResult$localPredict
 purchaseOnline <- purchaseResult$onlinePredict
+
 
 ############### redeem #########################################
 redeemTotalTrain <- purchaseRedeemTotalTrain$redeem
@@ -278,19 +280,32 @@ cat('\n', '@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Redeem &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&',
 redeemResult <- annEnsemble(redeemTotalTrain, redeemTotalCV, redeemTotalTest, redeemTotalWhole, 
                             inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
+redeemLocal <- redeemResult$localPredict
 redeemOnline <- redeemResult$onlinePredict
 
-########$$$$$$$$$$$$$$$$$$$$$ merge online set $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$########
-startDate <- as.Date('2014-09-01')
-dateSeries <- vector(length = 30)
-for (i in 1 : 30) {
-  dateSeries[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+########$$$$$$$$$$$$$$$$$$$$$ merge local online set $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$########
+startDate <- as.Date('2014-08-01')
+report_date <- vector(length = 31)
+for (i in 1 : 31) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
   startDate <- startDate + 1
 }
-online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
+local <- data.frame(report_date, purchaseLocal, redeemLocal)
 
 if (run_online == F) {
-  write.table(x = online, file = 'z:\\theblueisland\\Season2\\online_dailyANN.csv', row.names = FALSE, col.names = FALSE, sep = ',')
+  write.table(x = local, file = 'z:\\theblueisland\\Season2\\local_dailyANN.csv', row.names = FALSE, sep = ',')
+}
+
+startDate <- as.Date('2014-09-01')
+report_date <- vector(length = 30)
+for (i in 1 : 30) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+  startDate <- startDate + 1
+}
+online <- data.frame(report_date, purchaseOnline, redeemOnline)
+
+if (run_online == F) {
+  write.table(x = online, file = 'z:\\theblueisland\\Season2\\online_dailyANN.csv', row.names = FALSE, sep = ',')
 }
 
 dataname <- online

@@ -39,13 +39,14 @@ error_variance <- function(yActual, yPredict) {
 }
 
 calculateDistance <- function(X, xNew) {
-  return (sqrt(rowSums(t((t(X) - xNew) * (t(X) - xNew)))))
+  unit <- (t(X) - xNew) * (1 : length(xNew))
+  return (sqrt(rowSums(t(unit * unit))))
 }
 
 singleDotPredict <- function(X, y, xNew, trainCount = 20) {
 #   X <- XScaling
 #   y <- yScaling
-#   xNew <- XTestScaling[1 : 1]
+#   xNew <- XTestScaling[1 : 5]
 #   trainCount = 20
   
   distance <- calculateDistance(X, xNew)
@@ -67,11 +68,13 @@ singleDotPredict <- function(X, y, xNew, trainCount = 20) {
   return (predict[1])
 }
 
-dotPredict <- function(timeVec, testVec, wholeVec, window, step = 1, predictDays = 31, online = 0) {
+dotPredict <- function(timeVec, testVec, wholeVec, 
+                       window, step = 1, trainCount = 20, 
+                       predictDays = 31, online = 0) {
 #   timeVec <- purchaseTotalTrain
 #   testVec <- purchaseTotalTest
 #   wholeVec <- purchaseTotalWhole
-#   window <- 1
+#   window <- 5
 #   step = 1
 #   predictDays = 31
 #   online = 1
@@ -102,7 +105,7 @@ dotPredict <- function(timeVec, testVec, wholeVec, window, step = 1, predictDays
 #     print (trainFrom)
 #     print (trainTo)
 #     print (xSingle)
-    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, trainCount = 20)
+    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, trainCount)
     XTestScaling[predictFrom : predictTo] = predictSingle
   }
   predictFinalFrom <- window + 1
@@ -139,9 +142,9 @@ dotPredictGridSearch <- function(timeVec, testVec, wholeVec, windowMax, predictD
     cat("windowSingle = ", windowSingle, '\n')
     result <- dotPredict(timeVec, testVec, wholeVec, windowSingle, 
                          step = 1, predictDays, online = 0)
-    MSESingle <- result$MSE
-    errorVar[windowSingle] <- MSESingle
-    cat("MSE = ", MSESingle, '\n')
+    errorVar[windowSingle] <- result$errorVar
+    cat("errorVar = ", result$errorVar, '\n')
+    cat("MSE = ", result$MSE, '\n')
     print("****************************************************************")
   }
   
@@ -195,6 +198,7 @@ purchaseResult <- dotPredictGridSearch(purchaseTotalTrain,
                                        purchaseTotalTest, 
                                        purchaseTotalWhole,
                                        windowMax = 50)
+purchaseLocal <- purchaseResult$predict
 purchaseOnline <- purchaseResult$onlineSet
 
 ############### redeem #########################################
@@ -207,21 +211,32 @@ redeemResult <- dotPredictGridSearch(redeemTotalTrain,
                                      redeemTotalTest, 
                                      redeemTotalWhole,
                                      windowMax = 50)
-
+redeemLocal <- redeemResult$predict
 redeemOnline <- redeemResult$onlineSet
 
-########$$$$$$$$$$$$$$$$$$$$$ merge online set $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$########
-startDate <- as.Date('2014-09-01')
-dateSeries <- vector(length = 30)
-for (i in 1 : 30) {
-  dateSeries[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+########$$$$$$$$$$$$$$$$$$$$$ merge local online set $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$########
+startDate <- as.Date('2014-08-01')
+report_date <- vector(length = 31)
+for (i in 1 : 31) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
   startDate <- startDate + 1
 }
-online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
+local <- data.frame(report_date, purchaseLocal, redeemLocal)
 
 if (run_online == F) {
-  write.table(x = online, file = 'z:\\theblueisland\\Season2\\online_dot_for_all.csv', row.names = FALSE, col.names = FALSE, sep = ',')
+  write.table(x = local, file = 'z:\\theblueisland\\Season2\\local_dot_for_all.csv', row.names = FALSE, sep = ',')
+}
+
+startDate <- as.Date('2014-09-01')
+report_date <- vector(length = 30)
+for (i in 1 : 30) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+  startDate <- startDate + 1
+}
+online <- data.frame(report_date, purchaseOnline, redeemOnline)
+
+if (run_online == F) {
+  write.table(x = online, file = 'z:\\theblueisland\\Season2\\online_dot_for_all.csv', row.names = FALSE, sep = ',')
 }
 
 dataname <- online
-

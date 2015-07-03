@@ -182,7 +182,9 @@ purchaseTotalWhole <- purchaseRedeemTotalWhole$purchase
 purchaseResult <- annEnsemble(purchaseTotalTrain, purchaseTotalCV, purchaseTotalTest, purchaseTotalWhole,
                               inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
+purchaseLocal <- purchaseResult$localPredict
 purchaseOnline <- purchaseResult$onlinePredict
+
 
 redeemTotalTrain <- purchaseRedeemTotalTrain$redeem
 redeemTotalCV <- purchaseRedeemTotalCV$redeem
@@ -192,15 +194,27 @@ redeemTotalWhole <- purchaseRedeemTotalWhole$redeem
 redeemResult <- annEnsemble(redeemTotalTrain, redeemTotalCV, redeemTotalTest, redeemTotalWhole, 
                             inputTimeLengthMax = 23, modelCount = 6, predictDays = 31)
 
+redeemLocal <- redeemResult$localPredict
 redeemOnline <- redeemResult$onlinePredict
 
-startDate <- as.Date('2014-09-01')
-dateSeries <- vector(length = 30)
-for (i in 1 : 30) {
-  dateSeries[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+startDate <- as.Date('2014-08-01')
+report_date <- vector(length = 31)
+for (i in 1 : 31) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
   startDate <- startDate + 1
 }
-online <- data.frame(dateSeries, purchaseOnline, redeemOnline)
+local <- data.frame(report_date, purchaseLocal, redeemLocal)
+
+if (run_online == F) {
+}
+
+startDate <- as.Date('2014-09-01')
+report_date <- vector(length = 30)
+for (i in 1 : 30) {
+  report_date[i] <- as.numeric(strftime(startDate, format = '%Y%m%d'))
+  startDate <- startDate + 1
+}
+online <- data.frame(report_date, purchaseOnline, redeemOnline)
 
 if (run_online == F) {
 }
