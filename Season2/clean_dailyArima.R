@@ -14,23 +14,23 @@ if (run_online == F) {
   purchaseRedeemTotal <- dataset1
 }
 
-localPurchaseRedeemTotal <- purchaseRedeemTotal[124 : 396, ]
+localPurchaseRedeemTotal <- purchaseRedeemTotal[244 : 396, ]
 
 localPurchaseTotal <- localPurchaseRedeemTotal$purchase
 localRedeemTotal <- localPurchaseRedeemTotal$redeem
 
-purchasePredict <- runArima(localPurchaseTotal, c(6, 1, 5), c(1, 1, 0), 31)
+purchasePredict <- runArima(localPurchaseTotal, c(0, 1, 2), c(1, 1, 0), 31)
 redeemPredict <- runArima(localRedeemTotal, c(2, 1, 2), c(1, 1, 0), 31)
 
 purchaseLocal <- purchasePredict
 redeemLocal <- redeemPredict
 
-onlinePurchaseRedeemTotal <- purchaseRedeemTotal[124 : 427, ]
+onlinePurchaseRedeemTotal <- purchaseRedeemTotal[244 : 427, ]
 
 onlinePurchaseTotal <- onlinePurchaseRedeemTotal$purchase
 onlineRedeemTotal <- onlinePurchaseRedeemTotal$redeem
 
-purchasePredict <- runArima(onlinePurchaseTotal, c(6, 1, 5), c(1, 1, 0), 30)
+purchasePredict <- runArima(onlinePurchaseTotal, c(0, 1, 2), c(1, 1, 0), 30)
 redeemPredict <- runArima(onlineRedeemTotal, c(2, 1, 2), c(1, 1, 0), 30)
 
 purchaseOnline <- purchasePredict

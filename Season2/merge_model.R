@@ -3,16 +3,18 @@ run_online = F
 if (run_online == F) {
   dailyARIMA <- read.csv('z:\\theblueisland\\Season2\\online_dailyARIMA.csv')
   dot_for_all <- read.csv('z:\\theblueisland\\Season2\\online_dot_for_all.csv')
-  #dailyANN <- read.csv('z:\\theblueisland\\Season2\\online_dailyANN.csv')
+  baseline <- read.csv('z:\\theblueisland\\Season2\\online_baseline.csv')
   
-  purchaseMerge <- 0.5 * dailyARIMA$purchaseOnline + 0.5 * dot_for_all$purchaseOnline
-  redeemMerge <- 0.5 * dailyARIMA$redeemOnline + 0.5 * dot_for_all$redeemOnline
+  purchaseMerge <- 0.2 * dailyARIMA$purchaseOnline + 0.2 * dot_for_all$purchaseOnline + 0.6 * baseline$purchaseOnline
+  redeemMerge <- 0.2 * dailyARIMA$redeemOnline + 0.2 * dot_for_all$redeemOnline + 0.6 * baseline$redeemOnline
+  
 } else {
   dailyARIMA <- dataset1
   dot_for_all <- dataset2
+  baseline <- dataset3
   
-  purchaseMerge <- 0.5 * dailyARIMA$purchaseonline + 0.5 * dot_for_all$purchaseonline
-  redeemMerge <- 0.5 * dailyARIMA$redeemonline + 0.5 * dot_for_all$redeemonline
+  purchaseMerge <- 0.2 * dailyARIMA$purchaseonline + 0.2 * dot_for_all$purchaseonline + 0.6 * baseline$purchaseonline
+  redeemMerge <- 0.2 * dailyARIMA$redeemonline + 0.2 * dot_for_all$redeemonline + 0.6 * baseline$redeemonline
 }
 
 report_date <- dailyARIMA$report_date

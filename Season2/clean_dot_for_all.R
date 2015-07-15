@@ -40,18 +40,34 @@ calculateDistance <- function(X, xNew) {
   return (sqrt(rowSums(t(unit * unit))))
 }
 
-singleDotPredict <- function(X, y, xNew, trainCount = 20) {
+singleDotPredict <- function(X, y, xNew, window, rowIndex, trainCount = 20) {
   
-  distance <- calculateDistance(X, xNew)
+  distance <- calculateDistance(X[, 1 : window], xNew)
   trainIndex <- order(distance)[1 : trainCount]
   XTrain <- X[trainIndex, , drop = FALSE]
   yTrain <- y[trainIndex, , drop = FALSE]
   
   
   fit <- glmnet(as.matrix(XTrain), yTrain[ , 1])
-  predict <- predict(fit, newx = matrix(xNew, nrow = 1), s=c(0.01))
-  
+  xNew <- matrix(xNew, nrow = 1)
+  rowIndex <- (nrow(X) + rowIndex) %% 7 + 7
+  weekdayFeature <- as.matrix(X[rowIndex, (window + 1) : ncol(X)])
+  xNew2 <- cbind(xNew, weekdayFeature)
+  predict <- predict(fit, newx = as.matrix(xNew2), s=c(0.01))
+
   return (predict[1])
+}
+
+addWeekdayFeature <- function(X) {
+  
+  rowNumber <- as.integer(row.names(X))
+  rowNumber <- rowNumber %% 7  
+  weekDay <- matrix(nrow = nrow(X), ncol = 7)
+  for (i in (1 : 7)) {
+    weekDay[ , i] <- (rowNumber == (i - 1))
+  }
+  binaryFeature <- matrix(data = sapply(weekDay, as.integer), nrow = nrow(X), ncol = 7)
+  return (cbind(X, binaryFeature))
 }
 
 dotPredict <- function(timeVec, testVec, wholeVec, 
@@ -73,13 +89,17 @@ dotPredict <- function(timeVec, testVec, wholeVec,
   yScaling <- data.frame((y - yMIN)/(yMAX - yMIN))
   
   XTestScaling <- c(unlist(XTestScaling[1,]), 1 : predictDays)
+  
+  XScaling <- weekdayFeature <- addWeekdayFeature(XScaling)
+  
   for (i in seq(from = 1, to = predictDays, by = step)) {
     trainFrom <- i
     trainTo <- i + window - 1
     predictFrom <- window + i
     predictTo <- predictFrom + step - 1
     xSingle <- XTestScaling[trainFrom : trainTo]
-    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, trainCount)
+    predictSingle <- singleDotPredict(XScaling, yScaling, xSingle, 
+                                      window, i, trainCount)
     XTestScaling[predictFrom : predictTo] = predictSingle
   }
   predictFinalFrom <- window + 1
@@ -150,7 +170,7 @@ purchaseTotalWhole <- purchaseRedeemTotalWhole$purchase
 purchaseResult <- dotPredictGridSearch(purchaseTotalTrain, 
                                        purchaseTotalTest, 
                                        purchaseTotalWhole,
-                                       windowMax = 50)
+                                       windowMax = 10)
 purchaseLocal <- purchaseResult$predict
 purchaseOnline <- purchaseResult$onlineSet
 
@@ -161,7 +181,7 @@ redeemTotalWhole <- purchaseRedeemTotalWhole$redeem
 redeemResult <- dotPredictGridSearch(redeemTotalTrain, 
                                      redeemTotalTest, 
                                      redeemTotalWhole,
-                                     windowMax = 50)
+                                     windowMax = 10)
 redeemLocal <- redeemResult$predict
 redeemOnline <- redeemResult$onlineSet
 

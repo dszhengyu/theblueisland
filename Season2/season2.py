@@ -7,7 +7,7 @@ purchaseRedeemTotal.plot()
 
 ## clean R script
 
-files = ['dailyArima.R', 'dailyANN.R', 'dot_for_all.R', 'merge_model.R']
+files = ['dailyArima.R', 'dailyANN.R', 'dot_for_all.R', 'merge_model.R', 'baseline.R']
 
 for file in files:
     badChar = ['#', 'cat', 'print', 'plot', 'lines']
@@ -27,14 +27,14 @@ for file in files:
 
 ## compare online set
 
-allMethod = ['dailyANN', 'dailyARIMA', 'dot_for_all', 'merge']
+allMethod = ['dailyANN', 'dailyARIMA', 'dot_for_all', 'baseline', 'merge']
 
 for localSingle in allMethod:
-        predictLocal = pd.read_csv('z:\\theblueisland\\Season2\\local_' + localSingle + '.csv',
+    predictLocal = pd.read_csv('z:\\theblueisland\\Season2\\local_' + localSingle + '.csv',
                                 parse_dates = ['report_date'], index_col = ['report_date'])
-    predictLocal.plot(title = localSingle)
+    predictLocal.plot(title = 'local ' + localSingle)
 
 for onlineSingle in allMethod:
     predictOnline = pd.read_csv('z:\\theblueisland\\Season2\\online_' + onlineSingle + '.csv',
                                 parse_dates = ['report_date'], index_col = ['report_date'])
-    predictOnline.plot(title = onlineSingle)
+    predictOnline.plot(title = 'online ' + onlineSingle)
